@@ -1,3 +1,8 @@
+# testFn:
+#   role:
+#     "Fn::ImportValue": "${self:custom.projectName}-${self:provider.stage}-MicroservicesFunctionRole:Arn"
+#   handler: test/index.handler
+
 insertCoffee:
   role:
     "Fn::ImportValue": "${self:custom.projectName}-${self:provider.stage}-MicroservicesFunctionRole:Arn"

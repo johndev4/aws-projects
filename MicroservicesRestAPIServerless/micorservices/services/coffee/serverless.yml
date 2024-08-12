@@ -1,13 +1,25 @@
 service: ${self:custom.projectName}-coffee
 frameworkVersion: "3"
+useDotEnv: true
 
 custom:
-  projectName: johncloud
+  projectName: ${env:PROJECT_NAME, "fallback"}
   webpack:
     webpackConfig: "./webpack.config.js"
     packager: "npm"
     includeModules: false # Use the node_modules from layer instead
-
+  dotenv:
+    path: ..\..\..\..\environments\.env.${self:provider.stage, "development"}
+    exclude:
+      - AWS_ACCESS_KEY_ID
+      - AWS_SECRET_ACCESS_KEY
+      - AWS_SESSION_TOKEN
+      - AWS_DEFAULT_REGION
+      - NODE_ENV
+    required:
+      env:
+        - PROJECT_NAME
+      file: true
 provider:
   name: aws
   runtime: nodejs20.x
@@ -38,7 +50,7 @@ package:
 plugins:
   - serverless-webpack
   - serverless-offline
-
+  - serverless-dotenv-plugin
 layers:
   NodeModules:
     name: ${self:service}-${self:provider.stage}-layer

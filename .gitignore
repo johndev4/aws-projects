@@ -4,7 +4,7 @@
 # dotenv and keys
 environments/keys
 environments/.*env
-environments/.env
+environments/.env*
 
 # Modules
 **/node_modules

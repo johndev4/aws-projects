@@ -1,5 +1,23 @@
 ## Microservices
 
+### Prerequisites
+
+- AWS
+- Node.js (v20)
+- Docker
+
+### DotENV
+
+```bash
+# For AWS deployment using Docker
+AWS_ACCESS_KEY_ID=
+AWS_SECRET_ACCESS_KEY=
+AWS_DEFAULT_REGION=
+
+# Required project name for microservices Rest API serverless
+PROJECT_NAME=
+```
+
 ### Deployment
 
 1. From root directory `MicroserviceUsingServerlessFramework`, navigate to `.docker` of `infrastructure` folder.
@@ -30,7 +48,7 @@ In the future, if you have too many services, you may also add common dependenci
 
 ### Prerequisites
 
-• Python
+- Python
 
 ### Installation
 

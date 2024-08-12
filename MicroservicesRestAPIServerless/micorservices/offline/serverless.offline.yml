@@ -1,7 +1,19 @@
-service: offline
+service: ${self:custom.projectName}-offline
 
 custom:
-  projectName: johncloud
+  projectName: ${env:PROJECT_NAME, "fallback"}
+  dotenv:
+    path: ..\..\..\environments\.env.${self:provider.stage, "dev"}
+    exclude:
+      - AWS_ACCESS_KEY_ID
+      - AWS_SECRET_ACCESS_KEY
+      - AWS_SESSION_TOKEN
+      - AWS_DEFAULT_REGION
+      - NODE_ENV
+    required:
+      env:
+        - PROJECT_NAME
+      file: true
 
 provider:
   name: aws
@@ -33,5 +45,6 @@ resources:
 
 plugins:
   - serverless-offline
+  - serverless-dotenv-plugin
 
 functions:
