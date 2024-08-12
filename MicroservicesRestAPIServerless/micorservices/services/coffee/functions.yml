@@ -1,0 +1,85 @@
+insertCoffee:
+  role:
+    "Fn::ImportValue": "${self:custom.projectName}-${self:provider.stage}-MicroservicesFunctionRole:Arn"
+  handler: insertCoffee/index.handler
+  vpc:
+    securityGroupIds:
+      - "Fn::ImportValue": "${self:custom.projectName}-${self:provider.stage}-Vpc:WebSecurityGroupId"
+    subnetIds:
+      - "Fn::ImportValue": "${self:custom.projectName}-${self:provider.stage}-Vpc:PrivateSubnetAId"
+      - "Fn::ImportValue": "${self:custom.projectName}-${self:provider.stage}-Vpc:PrivateSubnetBId"
+
+  layers:
+    - { Ref: NodeModulesLambdaLayer }
+  events:
+    - http:
+        path: /coffee/post
+        method: post
+
+getCoffee:
+  role:
+    "Fn::ImportValue": "${self:custom.projectName}-${self:provider.stage}-MicroservicesFunctionRole:Arn"
+  handler: getCoffee/index.handler
+  vpc:
+    securityGroupIds:
+      - "Fn::ImportValue": "${self:custom.projectName}-${self:provider.stage}-Vpc:WebSecurityGroupId"
+    subnetIds:
+      - "Fn::ImportValue": "${self:custom.projectName}-${self:provider.stage}-Vpc:PrivateSubnetAId"
+      - "Fn::ImportValue": "${self:custom.projectName}-${self:provider.stage}-Vpc:PrivateSubnetBId"
+  layers:
+    - { Ref: NodeModulesLambdaLayer }
+  events:
+    - http:
+        path: /coffee/get/{id}
+        method: get
+
+getCoffeeList:
+  role:
+    "Fn::ImportValue": "${self:custom.projectName}-${self:provider.stage}-MicroservicesFunctionRole:Arn"
+  handler: getCoffeeList/index.handler
+  vpc:
+    securityGroupIds:
+      - "Fn::ImportValue": "${self:custom.projectName}-${self:provider.stage}-Vpc:WebSecurityGroupId"
+    subnetIds:
+      - "Fn::ImportValue": "${self:custom.projectName}-${self:provider.stage}-Vpc:PrivateSubnetAId"
+      - "Fn::ImportValue": "${self:custom.projectName}-${self:provider.stage}-Vpc:PrivateSubnetBId"
+  layers:
+    - { Ref: NodeModulesLambdaLayer }
+  events:
+    - http:
+        path: /coffee/get/list
+        method: get
+
+updateCoffee:
+  role:
+    "Fn::ImportValue": "${self:custom.projectName}-${self:provider.stage}-MicroservicesFunctionRole:Arn"
+  handler: updateCoffee/index.handler
+  vpc:
+    securityGroupIds:
+      - "Fn::ImportValue": "${self:custom.projectName}-${self:provider.stage}-Vpc:WebSecurityGroupId"
+    subnetIds:
+      - "Fn::ImportValue": "${self:custom.projectName}-${self:provider.stage}-Vpc:PrivateSubnetAId"
+      - "Fn::ImportValue": "${self:custom.projectName}-${self:provider.stage}-Vpc:PrivateSubnetBId"
+  layers:
+    - { Ref: NodeModulesLambdaLayer }
+  events:
+    - http:
+        path: /coffee/update/{id}
+        method: patch
+
+deleteCoffee:
+  role:
+    "Fn::ImportValue": "${self:custom.projectName}-${self:provider.stage}-MicroservicesFunctionRole:Arn"
+  handler: deleteCoffee/index.handler
+  vpc:
+    securityGroupIds:
+      - "Fn::ImportValue": "${self:custom.projectName}-${self:provider.stage}-Vpc:WebSecurityGroupId"
+    subnetIds:
+      - "Fn::ImportValue": "${self:custom.projectName}-${self:provider.stage}-Vpc:PrivateSubnetAId"
+      - "Fn::ImportValue": "${self:custom.projectName}-${self:provider.stage}-Vpc:PrivateSubnetBId"
+  layers:
+    - { Ref: NodeModulesLambdaLayer }
+  events:
+    - http:
+        path: /coffee/delete/{id}
+        method: delete

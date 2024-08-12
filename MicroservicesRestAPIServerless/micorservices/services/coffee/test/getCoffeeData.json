@@ -1,0 +1,13 @@
+{
+  "resource": "/coffee/get/{id}",
+  "path": "/coffee/get/fad9d5e7-3115-4c0e-93f1-bfa1b12dbe34",
+  "httpMethod": "GET",
+  "queryStringParameters": null,
+  "multiValueQueryStringParameters": null,
+  "pathParameters": {
+    "id": "fad9d5e7-3115-4c0e-93f1-bfa1b12dbe34"
+  },
+  "stageVariables": null,
+  "body": null,
+  "isBase64Encoded": false
+}

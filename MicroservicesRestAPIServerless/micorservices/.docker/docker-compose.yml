@@ -1,0 +1,26 @@
+version: "3"
+
+services:
+  coffee:
+    image: johncloud/aws-node-serverless:latest
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    container_name: sls-dev-service-builder
+    working_dir: /myservice
+    mem_limit: 4g
+    memswap_limit: 4g
+    mem_swappiness: 0
+    volumes:
+      - ../services/coffee:/myservice
+      - /myservice/node_modules
+      - /myservice/layer/nodejs/node_modules
+    env_file:
+      - ../../../environments/.env
+    command: sh -c "echo \"Build and deploy Coffee service\" && cd /myservice/layer/nodejs && npm i && cd /myservice && npm i && sls deploy -s development"
+    # command: sh -c "echo \"Remove Coffee service\" && sls remove -s development"
+    # command: sh -c "echo \"Invoke 'insertCoffee' of Coffee service\" && cd /myservice && sls invoke local --function insertCoffee --path test/insertCoffeeData.json"
+    # command: sh -c "echo \"Invoke 'getCoffee' of Coffee service\" && cd /myservice && sls invoke local --function getCoffee --path test/getCoffeeData.json"
+    # command: sh -c "echo \"Invoke 'getCoffeeList' of Coffee service\" && cd /myservice && sls invoke local --function getCoffeeList --path test/getCoffeeListData.json"
+    # command: sh -c "echo \"Invoke 'updateCoffee' of Coffee service\" && cd /myservice && sls invoke local --function updateCoffee --path test/updateCoffeeData.json"
+    # command: sh -c "echo \"Invoke 'deleteCoffee' of Coffee service\" && cd /myservice && sls invoke local --function deleteCoffee --path test/deleteCoffeeData.json"

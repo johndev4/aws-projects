@@ -1,0 +1,33 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: Create API Gateway for microservices
+
+Parameters:
+  # Required for all templates
+  ProjectName:
+    Description: Name of the project
+    Type: String
+    Default: johncloud
+  Stage:
+    Description: An environment name that is prefixed to resource names
+    Type: String
+    AllowedValues: ["development", "production"]
+    Default: development
+
+Resources:
+  RestApi:
+    Type: AWS::ApiGateway::RestApi
+    Properties:
+      Name: !Sub ${ProjectName}-${Stage}-RestApiGw
+      MinimumCompressionSize: 0
+      EndpointConfiguration:
+        Types:
+          - EDGE
+Outputs:
+  RestApi:
+    Value: !Ref RestApi
+    Export:
+      Name: !Sub ${ProjectName}-${Stage}-ApiGw:RestApiId
+  RestApiRootResourceId:
+    Value: !GetAtt RestApi.RootResourceId
+    Export:
+      Name: !Sub ${ProjectName}-${Stage}-ApiGw:RootResourceId
