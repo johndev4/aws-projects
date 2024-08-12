@@ -1,0 +1,11 @@
+{
+  "name": "serverless-offline-template",
+  "version": "1.0.0",
+  "scripts": {
+    "offline": "python offline.py && serverless offline"
+  },
+  "devDependencies": {
+    "serverless": "^3.39.0",
+    "serverless-offline": "^13.6.0"
+  }
+}

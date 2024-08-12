@@ -1,0 +1,37 @@
+service: offline
+
+custom:
+  projectName: johncloud
+
+provider:
+  name: aws
+  runtime: nodejs20.x
+  stage: ${opt:stage, "development"}
+  region: ${opt:region, "ap-southeast-1"}
+  apiGateway:
+    restApiId:
+      "Fn::ImportValue": "${self:custom.projectName}-${self:provider.stage}-ApiGw:RestApiId"
+    restApiRootResourceId:
+      "Fn::ImportValue": "${self:custom.projectName}-${self:provider.stage}-ApiGw:RootResourceId"
+  environment:
+    PROJECT_NAME: ${self:custom.projectName}
+    STAGE: ${self:provider.stage}
+    REGION: ${self:provider.region}
+
+package:
+  excludeDevDependencies: false
+  exclude:
+    - serverless.yml
+    - functions.yml
+    - package.json
+    - package-lock.json
+    - node_modules/**
+
+resources:
+  Resources:
+    # offline resources here
+
+plugins:
+  - serverless-offline
+
+functions:
