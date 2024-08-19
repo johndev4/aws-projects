@@ -9,7 +9,7 @@ custom:
     packager: "npm"
     includeModules: false # Use the node_modules from layer instead
   dotenv:
-    path: ..\..\..\..\environments\.env.${self:provider.stage, "dev"}
+    path: ..\..\.env.${self:provider.stage, "dev"}
     exclude:
       - AWS_ACCESS_KEY_ID
       - AWS_SECRET_ACCESS_KEY

@@ -45,6 +45,7 @@ Resources:
               - "dynamodb:DeleteItem"
               - "dynamodb:GetItem"
               - "dynamodb:UpdateItem"
+              - "dynamodb:Scan"
             Resource: "*"
       Roles:
         - !Ref MicroservicesFunctionRole

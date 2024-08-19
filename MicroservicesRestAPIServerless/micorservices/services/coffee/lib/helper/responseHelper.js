@@ -11,9 +11,11 @@ let headers = {
  * @returns
  */
 function handleSuccess(body, statusCode, options = {}) {
+  const responseBody = JSON.stringify({ message: body ?? "Success" }, null, 2);
+  console.log(`Response Body: ${responseBody}`);
   return {
     statusCode: statusCode ?? 200,
-    body: JSON.stringify({ message: body ?? "Success" }),
+    body: responseBody,
     headers: { ...headers, ...(options?.["customHeaders"] ?? {}) },
   };
 }
@@ -26,9 +28,11 @@ function handleSuccess(body, statusCode, options = {}) {
  * @returns
  */
 function handleError(body, statusCode, options = {}) {
+  const responseBody = JSON.stringify({ message: body ?? "Internal Server Error" }, null, 2);
+  console.log(`Response Body: ${responseBody}`);
   return {
     statusCode: statusCode ?? 500,
-    body: JSON.stringify({ message: body ?? "Internal Server Error" }),
+    body: responseBody,
     headers: { ...headers, ...(options?.["customHeaders"] ?? {}) },
   };
 }

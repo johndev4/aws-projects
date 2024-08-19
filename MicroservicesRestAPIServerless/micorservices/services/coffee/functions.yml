@@ -20,6 +20,12 @@ insertCoffee:
     - http:
         path: /coffee/post
         method: post
+        cors: true
+        authorizer:
+          type: COGNITO_USER_POOLS
+          scopes: email
+          authorizerId:
+            "Fn::ImportValue": "${self:custom.projectName}-${self:provider.stage}-ApiGw:CognitoAuthorizerId"
 
 getCoffee:
   role:
@@ -37,6 +43,12 @@ getCoffee:
     - http:
         path: /coffee/get/{id}
         method: get
+        cors: true
+        authorizer:
+          type: COGNITO_USER_POOLS
+          scopes: email
+          authorizerId:
+            "Fn::ImportValue": "${self:custom.projectName}-${self:provider.stage}-ApiGw:CognitoAuthorizerId"
 
 getCoffeeList:
   role:
@@ -54,6 +66,12 @@ getCoffeeList:
     - http:
         path: /coffee/get/list
         method: get
+        cors: true
+        authorizer:
+          type: COGNITO_USER_POOLS
+          scopes: email
+          authorizerId:
+            "Fn::ImportValue": "${self:custom.projectName}-${self:provider.stage}-ApiGw:CognitoAuthorizerId"
 
 updateCoffee:
   role:
@@ -71,6 +89,12 @@ updateCoffee:
     - http:
         path: /coffee/update/{id}
         method: patch
+        cors: true
+        authorizer:
+          type: COGNITO_USER_POOLS
+          scopes: email
+          authorizerId:
+            "Fn::ImportValue": "${self:custom.projectName}-${self:provider.stage}-ApiGw:CognitoAuthorizerId"
 
 deleteCoffee:
   role:
@@ -88,3 +112,9 @@ deleteCoffee:
     - http:
         path: /coffee/delete/{id}
         method: delete
+        cors: true
+        authorizer:
+          type: COGNITO_USER_POOLS
+          scopes: email
+          authorizerId:
+            "Fn::ImportValue": "${self:custom.projectName}-${self:provider.stage}-ApiGw:CognitoAuthorizerId"
