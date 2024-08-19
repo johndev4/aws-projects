@@ -18,7 +18,7 @@ custom:
 provider:
   name: aws
   runtime: nodejs20.x
-  stage: ${opt:stage, "development"}
+  stage: ${opt:stage, "dev"}
   region: ${opt:region, "ap-southeast-1"}
   apiGateway:
     restApiId:

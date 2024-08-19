@@ -9,7 +9,7 @@ custom:
     packager: "npm"
     includeModules: false # Use the node_modules from layer instead
   dotenv:
-    path: ..\..\..\..\environments\.env.${self:provider.stage, "development"}
+    path: ..\..\..\..\environments\.env.${self:provider.stage, "dev"}
     exclude:
       - AWS_ACCESS_KEY_ID
       - AWS_SECRET_ACCESS_KEY
@@ -23,7 +23,7 @@ custom:
 provider:
   name: aws
   runtime: nodejs20.x
-  stage: ${opt:stage, "development"}
+  stage: ${opt:stage, "dev"}
   region: ${opt:region, "ap-southeast-1"}
   apiGateway:
     restApiId:

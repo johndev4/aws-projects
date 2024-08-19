@@ -10,8 +10,8 @@ Parameters:
   Stage:
     Description: An environment name that is prefixed to resource names
     Type: String
-    AllowedValues: ["development", "production"]
-    Default: development
+    AllowedValues: ["dev", "prod"]
+    Default: dev
 
 Resources:
   RestApi:

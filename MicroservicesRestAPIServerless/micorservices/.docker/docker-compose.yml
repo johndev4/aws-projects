@@ -16,9 +16,9 @@ services:
       - /myservice/node_modules
       - /myservice/layer/nodejs/node_modules
     env_file:
-      - ../../../environments/.env
-    command: sh -c "echo \"Build and deploy Coffee service\" && cd /myservice/layer/nodejs && npm i && cd /myservice && npm i && sls deploy -s development"
-    # command: sh -c "echo \"Remove Coffee service\" && sls remove -s development"
+      - ../../../environments/.env.dev
+    command: sh -c "echo \"Build and deploy Coffee service\" && cd /myservice/layer/nodejs && npm i && cd /myservice && npm i && sls deploy -s dev"
+    # command: sh -c "echo \"Remove Coffee service\" && sls remove -s dev"
     # command: sh -c "echo \"Invoke 'insertCoffee' of Coffee service\" && cd /myservice && sls invoke local --function insertCoffee --path test/insertCoffeeData.json"
     # command: sh -c "echo \"Invoke 'getCoffee' of Coffee service\" && cd /myservice && sls invoke local --function getCoffee --path test/getCoffeeData.json"
     # command: sh -c "echo \"Invoke 'getCoffeeList' of Coffee service\" && cd /myservice && sls invoke local --function getCoffeeList --path test/getCoffeeListData.json"

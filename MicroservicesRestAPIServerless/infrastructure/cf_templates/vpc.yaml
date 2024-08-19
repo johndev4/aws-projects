@@ -11,9 +11,9 @@ Parameters:
     Description: An environment name that is prefixed to resource names
     Type: String
     AllowedValues:
-      - development
-      - production
-    Default: development
+      - dev
+      - prod
+    Default: dev
   # Custom for VPC template
   VpcCIDR:
     Description: IP range (CIDR notation) for this VPC

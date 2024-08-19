@@ -32,7 +32,7 @@ $ cd .\micorservices\.docker
 $ docker compose up [service_name]
 ```
 
-**_Note: Make sure you are using `command: sh -c "echo \"Build and deploy Coffee service\" && cd /myservice/layer/nodejs && npm i && cd /myservice && npm i && npx sls deploy -s development"` inside the `docker-compose.yml` file._**
+**_Note: Make sure you are using `command: sh -c "echo \"Build and deploy Coffee service\" && cd /myservice/layer/nodejs && npm i && cd /myservice && npm i && npx sls deploy -s dev"` inside the `docker-compose.yml` file._**
 
 ### Adding common dependencies
 
