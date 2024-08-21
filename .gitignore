@@ -2,9 +2,10 @@
 **/.vscode
 
 # dotenv and keys
-environments/keys
-environments/.*env
-environments/.env*
+**/keys
+**/.*env
+**/.env*
+
 
 # Modules
 **/node_modules

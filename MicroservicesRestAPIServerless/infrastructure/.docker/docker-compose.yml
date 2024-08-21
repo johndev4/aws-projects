@@ -1,0 +1,18 @@
+version: "3"
+
+services:
+  create-stacks:
+    image: johncloud/bobthebuilder:latest
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    container_name: create-stacks-dev
+    working_dir: /infrastructure
+    mem_limit: 2g
+    memswap_limit: 2g
+    mem_swappiness: 0
+    volumes:
+      - ../.:/infrastructure
+    env_file:
+      - ../.env.dev
+    command: python3 ./scripts/cf-create-stacks.py
