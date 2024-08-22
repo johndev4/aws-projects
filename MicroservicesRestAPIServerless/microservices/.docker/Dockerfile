@@ -6,6 +6,7 @@ RUN set -ex \
     && curl -sL https://rpm.nodesource.com/setup_20.x | bash - \
     && yum install nodejs -y && npm i -g serverless@3.39.0    \
     && yum install -y aws-cli python3 \
+    && yum install -y aws-cli pip \
     && npm config set registry http://registry.npmjs.org/ && npm config set loglevel info \
     && npm config set fetch-retries 3 && npm config set audit false && npm config set fetch-retry-mintimeout 15000 \
     && npm config set fetch-retry-maxtimeout 90000 && npm config set progress false \

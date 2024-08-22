@@ -2,7 +2,7 @@
 
 ### Prerequisites
 
-- AWS
+- AWS CLI
 - Node.js (v20)
 - Docker
 
@@ -14,8 +14,12 @@ AWS_ACCESS_KEY_ID=
 AWS_SECRET_ACCESS_KEY=
 AWS_DEFAULT_REGION=
 
-# Required project name for microservices Rest API serverless
+# Required environment variables for microservices Rest API serverless
 PROJECT_NAME=
+STAGE=dev
+
+# Unbuffer the entire service
+PYTHONUNBUFFERED=1
 ```
 
 ### Deployment
@@ -23,7 +27,7 @@ PROJECT_NAME=
 1. From root directory `MicroserviceUsingServerlessFramework`, navigate to `.docker` of `infrastructure` folder.
 
 ```bash
-$ cd .\micorservices\.docker
+$ cd .\microservices\.docker
 ```
 
 2. Run the docker compose command and specify the name of the service to deploy
