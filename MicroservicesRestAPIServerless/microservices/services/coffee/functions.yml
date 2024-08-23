@@ -6,7 +6,7 @@
 insertCoffee:
   role:
     "Fn::ImportValue": "${self:custom.projectName}-${self:provider.stage}-MicroservicesFunctionRole:Arn"
-  handler: insertCoffee/index.handler
+  handler: functions/insertCoffee/index.handler
   vpc:
     securityGroupIds:
       - "Fn::ImportValue": "${self:custom.projectName}-${self:provider.stage}-Vpc:WebSecurityGroupId"
@@ -29,7 +29,7 @@ insertCoffee:
 getCoffee:
   role:
     "Fn::ImportValue": "${self:custom.projectName}-${self:provider.stage}-MicroservicesFunctionRole:Arn"
-  handler: getCoffee/index.handler
+  handler: functions/getCoffee/index.handler
   vpc:
     securityGroupIds:
       - "Fn::ImportValue": "${self:custom.projectName}-${self:provider.stage}-Vpc:WebSecurityGroupId"
@@ -52,7 +52,7 @@ getCoffee:
 getCoffeeList:
   role:
     "Fn::ImportValue": "${self:custom.projectName}-${self:provider.stage}-MicroservicesFunctionRole:Arn"
-  handler: getCoffeeList/index.handler
+  handler: functions/getCoffeeList/index.handler
   vpc:
     securityGroupIds:
       - "Fn::ImportValue": "${self:custom.projectName}-${self:provider.stage}-Vpc:WebSecurityGroupId"
@@ -75,7 +75,7 @@ getCoffeeList:
 updateCoffee:
   role:
     "Fn::ImportValue": "${self:custom.projectName}-${self:provider.stage}-MicroservicesFunctionRole:Arn"
-  handler: updateCoffee/index.handler
+  handler: functions/updateCoffee/index.handler
   vpc:
     securityGroupIds:
       - "Fn::ImportValue": "${self:custom.projectName}-${self:provider.stage}-Vpc:WebSecurityGroupId"
@@ -98,7 +98,7 @@ updateCoffee:
 deleteCoffee:
   role:
     "Fn::ImportValue": "${self:custom.projectName}-${self:provider.stage}-MicroservicesFunctionRole:Arn"
-  handler: deleteCoffee/index.handler
+  handler: functions/deleteCoffee/index.handler
   vpc:
     securityGroupIds:
       - "Fn::ImportValue": "${self:custom.projectName}-${self:provider.stage}-Vpc:WebSecurityGroupId"
