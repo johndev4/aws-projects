@@ -1,8 +1,8 @@
 "use strict";
 
-const { getDdbItemList } = require("../../lib/helper/awsDDBHelper");
-const { extractUserDetails } = require("../../lib/helper/auth");
-const { handleSuccess, handleError } = require("../../lib/helper/responseHelper");
+const { getDdbItemList } = require("../../lib/helpers/awsDdb");
+const { extractUserDetails } = require("../../lib/helpers/auth");
+const { handleSuccess, handleError } = require("../../lib/helpers/response");
 const config = require("../../lib/utils/config");
 
 module.exports.handler = async (event) => {

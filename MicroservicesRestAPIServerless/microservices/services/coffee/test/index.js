@@ -1,6 +1,6 @@
 "use strict";
 
-const { handleSuccess, handleError } = require("../lib/helper/responseHelper");
+const { handleSuccess, handleError } = require("../lib/helpers/response");
 const config = require("../lib/utils/config");
 
 module.exports.handler = async (event) => {

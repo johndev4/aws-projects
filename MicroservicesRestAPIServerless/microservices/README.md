@@ -48,6 +48,8 @@ $ npm install [dependency_name]
 
 In the future, if you have too many services, you may also add common dependencies for all microservices and automate the installation of these common dependencies. This approach makes it easier and faster for developers to install dependencies and prevents problematic missing dependencies after deployment.
 
+**_Note: `@aws-sdk` package is optional in Lambda layer's `package.json` because AWS provides it already in their Lambda environment._**
+
 ## Serverless Offline for Local Environment
 
 ### Prerequisites

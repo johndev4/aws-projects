@@ -1,12 +1,13 @@
-const AWS = require("aws-sdk");
+const { DynamoDBDocument } = require("@aws-sdk/lib-dynamodb");
+const { DynamoDB } = require("@aws-sdk/client-dynamodb");
 const { v4: uuidv4 } = require("uuid");
 const config = require("../utils/config");
 
-AWS.config.update({
-  region: config.region,
-});
-
-const documentClient = new AWS.DynamoDB.DocumentClient();
+const documentClient = DynamoDBDocument.from(
+  new DynamoDB({
+    region: config.region,
+  })
+);
 
 /**
  *
@@ -21,7 +22,7 @@ async function insertDdbItem(tableName, item) {
       Item: { ...item, id: item.id ?? uuidv4() },
     };
 
-    const data = await documentClient.put(params).promise();
+    const data = await documentClient.put(params);
     console.log("InsertDdbItem Result:", data);
     return "Item inserted successfully.";
   } catch (err) {
@@ -45,7 +46,7 @@ async function getDdbItem(tableName, id) {
       },
     };
 
-    const data = await documentClient.get(params).promise();
+    const data = await documentClient.get(params);
     console.log("GetDdbItem Result:", data);
     return data.Item;
   } catch (err) {
@@ -65,7 +66,7 @@ async function getDdbItemList(tableName) {
       TableName: tableName,
     };
 
-    const data = await documentClient.scan(params).promise();
+    const data = await documentClient.scan(params);
     console.log("GetDdbItem Result:", data);
     return data.Items;
   } catch (err) {
@@ -91,17 +92,15 @@ async function updateDdbItem(tableName, id, item) {
       expressionAttributeValues[`:${key}`] = item[key];
     });
 
-    const data = await documentClient
-      .update({
-        TableName: tableName,
-        Key: {
-          id: id,
-        },
-        UpdateExpression: updateExpression,
-        ExpressionAttributeValues: expressionAttributeValues,
-        ReturnValues: "ALL_NEW",
-      })
-      .promise();
+    const data = await documentClient.update({
+      TableName: tableName,
+      Key: {
+        id: id,
+      },
+      UpdateExpression: updateExpression,
+      ExpressionAttributeValues: expressionAttributeValues,
+      ReturnValues: "ALL_NEW",
+    });
     console.log("UpdateDdbItem Result:", data);
     return "Item updated successfully.";
   } catch (err) {
@@ -118,14 +117,12 @@ async function updateDdbItem(tableName, id, item) {
  */
 async function deleteDdbItem(tableName, id) {
   try {
-    const data = await documentClient
-      .delete({
-        TableName: tableName,
-        Key: {
-          id: id,
-        },
-      })
-      .promise();
+    const data = await documentClient.delete({
+      TableName: tableName,
+      Key: {
+        id: id,
+      },
+    });
     console.log("DeleteDdbItem Result:", data);
     return "Item deleted successfully.";
   } catch (err) {
