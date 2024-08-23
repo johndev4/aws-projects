@@ -2,7 +2,7 @@
   "name": "serverless-offline-template",
   "version": "1.0.0",
   "scripts": {
-    "offline": "python offline.py && serverless offline -s dev"
+    "offline": "python offline.py && npx sls offline"
   },
   "devDependencies": {
     "serverless": "^3.39.0",

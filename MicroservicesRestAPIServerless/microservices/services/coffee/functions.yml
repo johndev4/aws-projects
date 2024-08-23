@@ -13,7 +13,6 @@ insertCoffee:
     subnetIds:
       - "Fn::ImportValue": "${self:custom.projectName}-${self:provider.stage}-Vpc:PrivateSubnetAId"
       - "Fn::ImportValue": "${self:custom.projectName}-${self:provider.stage}-Vpc:PrivateSubnetBId"
-
   layers:
     - { Ref: NodeModulesLambdaLayer }
   events:

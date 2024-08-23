@@ -1,18 +1,26 @@
-service: ${self:custom.projectName}-offline
+service: offline
+frameworkVersion: "3"
 
 custom:
   projectName: ${env:PROJECT_NAME, "fallback"}
+  serverless-offline:
+    httpPort: 4000
+    stage: dev
+    noAuth: true
+    useInProcess: true
   dotenv:
-    path: ..\..\..\environments\.env.${self:provider.stage, "dev"}
+    path: ../.env.${self:provider.stage, "dev"}
     exclude:
       - AWS_ACCESS_KEY_ID
       - AWS_SECRET_ACCESS_KEY
       - AWS_SESSION_TOKEN
       - AWS_DEFAULT_REGION
       - NODE_ENV
+      - PYTHONUNBUFFERED
     required:
       env:
         - PROJECT_NAME
+        - STAGE
       file: true
 
 provider:
@@ -34,6 +42,7 @@ package:
   excludeDevDependencies: false
   exclude:
     - serverless.yml
+    - serverless.offline.yml
     - functions.yml
     - package.json
     - package-lock.json

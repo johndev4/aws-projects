@@ -25,12 +25,12 @@ if __name__ == "__main__" :
                             for name, value in functions:
                                 fn_name = '{0}-{1}'.format(d, name)
                                 handler_path = '../services/{0}/{1}'.format(d, value['handler'])
-                                events = value.get('events', None)
-                                if events:
-                                    for event in events:
-                                        if 'http' in event and 'authorizer' in event['http']:
-                                            event['http'].pop('authorizer', None)
-
+                                # events = value.get('events', None)
+                                # if events:
+                                #     for event in events:
+                                #         print(event['http'])
+                                #         if 'http' in event and 'authorizer' in event['http']:
+                                #             event['http'].pop('authorizer', None)
                                 value['handler'] = handler_path
                                 serverless_yml['functions'][fn_name] = value
                     except yaml.YAMLError as exc:

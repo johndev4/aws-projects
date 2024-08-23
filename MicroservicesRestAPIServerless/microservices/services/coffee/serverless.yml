@@ -3,11 +3,16 @@ frameworkVersion: "3"
 useDotEnv: true
 
 custom:
-  projectName: ${env:PROJECT_NAME, "fallback"}
+  projectName: ${env:PROJECT_NAME, "offline"}
   webpack:
     webpackConfig: "./webpack.config.js"
     packager: "npm"
     includeModules: false # Use the node_modules from layer instead
+  serverless-offline:
+    httpPort: 5000
+    stage: dev
+    noAuth: true
+    useInProcess: true
   dotenv:
     path: ..\..\.env.${self:provider.stage, "dev"}
     exclude:
@@ -16,9 +21,11 @@ custom:
       - AWS_SESSION_TOKEN
       - AWS_DEFAULT_REGION
       - NODE_ENV
+      - PYTHONUNBUFFERED
     required:
       env:
         - PROJECT_NAME
+        - STAGE
       file: true
 provider:
   name: aws
