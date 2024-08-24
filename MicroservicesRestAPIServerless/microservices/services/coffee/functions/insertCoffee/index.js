@@ -21,7 +21,7 @@ module.exports.handler = async (event) => {
     }
 
     let result = null;
-    result = await insertDdbItem(`${config.project_name}-${config.stage}-Coffee`, data);
+    result = await insertDdbItem(`${config.project_name}-${config.stage}-Coffees`, data);
 
     return handleSuccess({ result });
   } catch (err) {

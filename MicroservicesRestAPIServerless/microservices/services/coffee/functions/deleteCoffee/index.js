@@ -21,7 +21,7 @@ module.exports.handler = async (event) => {
     }
 
     let result = null;
-    result = await deleteDdbItem(`${config.project_name}-${config.stage}-Coffee`, id);
+    result = await deleteDdbItem(`${config.project_name}-${config.stage}-Coffees`, id);
 
     return handleSuccess({ result });
   } catch (err) {

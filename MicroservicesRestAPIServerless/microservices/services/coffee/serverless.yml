@@ -41,7 +41,6 @@ provider:
     PROJECT_NAME: ${self:custom.projectName}
     STAGE: ${self:provider.stage}
     REGION: ${self:provider.region}
-
 package:
   individually: true
   excludeDevDependencies: false
@@ -53,7 +52,6 @@ package:
     - package-lock.json
     - webpack.config.js
     - node_modules/**
-
 plugins:
   - serverless-webpack
   - serverless-offline
@@ -66,6 +64,5 @@ layers:
     compatibleRuntimes:
       - nodejs20.x
     retain: false
-
 functions:
   - ${file(functions.yml)}

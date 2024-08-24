@@ -22,7 +22,7 @@ module.exports.handler = async (event) => {
     }
 
     let result = null;
-    result = await updateDdbItem(`${config.project_name}-${config.stage}-Coffee`, id, data);
+    result = await updateDdbItem(`${config.project_name}-${config.stage}-Coffees`, id, data);
 
     return handleSuccess({ result });
   } catch (err) {

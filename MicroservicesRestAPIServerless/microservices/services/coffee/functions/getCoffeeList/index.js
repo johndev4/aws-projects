@@ -15,7 +15,7 @@ module.exports.handler = async (event) => {
     console.log("userDetails: ", userDetails);
 
     let result = null;
-    result = await getDdbItemList(`${config.project_name}-${config.stage}-Coffee`);
+    result = await getDdbItemList(`${config.project_name}-${config.stage}-Coffees`);
 
     return handleSuccess({ result });
   } catch (err) {

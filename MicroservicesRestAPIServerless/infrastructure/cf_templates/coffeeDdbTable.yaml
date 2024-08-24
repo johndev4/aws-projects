@@ -16,10 +16,10 @@ Parameters:
     Default: dev
 
 Resources:
-  CoffeeTable:
+  CoffeesTable:
     Type: AWS::DynamoDB::Table
     Properties:
-      TableName: !Sub ${ProjectName}-${Stage}-Coffee
+      TableName: !Sub ${ProjectName}-${Stage}-Coffees
       TableClass: STANDARD_INFREQUENT_ACCESS
       AttributeDefinitions:
         - AttributeName: id
