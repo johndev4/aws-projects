@@ -61,13 +61,12 @@ Resources:
       GenerateSecret: true
       RefreshTokenValidity: 30
       CallbackURLs:
-        - https://localhost:4200/dashboard
+        - http://localhost:4200/dashboard
       SupportedIdentityProviders:
         - COGNITO
       AllowedOAuthFlowsUserPoolClient: true
       AllowedOAuthFlows:
         - code
-        - implicit
       AllowedOAuthScopes:
         - email
         - openid

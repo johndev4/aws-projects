@@ -37,6 +37,7 @@ def create_or_update_stack(client, stack_name, template_body, parameters, capabi
             )
             stack_id = response['StackId']
             print(f"Stack update initiated: {stack_id}")
+            print("Info: For real time status, you can check it on AWS Console")
 
             # Wait for the stack to be updated
             waiter = client.get_waiter('stack_update_complete')

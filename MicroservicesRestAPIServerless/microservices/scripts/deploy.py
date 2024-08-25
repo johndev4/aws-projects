@@ -24,7 +24,7 @@ def deploy_service(service_name, layer_dir=''):
             layer_dir = f"{service_dir}/layer/nodejs"
 
         # Log the process
-        print("Building and deploying Coffee service...")
+        print(f"Building and deploying {service_name.title()} service...")
 
         # Install dependencies for the layer
         print(f"Installing dependencies in {layer_dir}...")

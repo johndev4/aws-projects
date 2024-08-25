@@ -1,12 +1,12 @@
 version: "3"
 
 services:
-  create-stacks:
+  cfstacks:
     image: johncloud/bobthebuilder:latest
     build:
       context: .
       dockerfile: ./Dockerfile
-    container_name: create-stacks-dev
+    container_name: cfstacks-dev
     working_dir: /infrastructure
     mem_limit: 2g
     memswap_limit: 2g
