@@ -1,0 +1,52 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: Create a REST API Gateway with Cognito Authorizer for microservices
+
+Parameters:
+  # Required for all templates
+  ProjectName:
+    Description: Name of the project
+    Type: String
+    Default: johncloud
+  Stage:
+    Description: An environment name that is prefixed to resource names
+    Type: String
+    AllowedValues:
+      - dev
+      - prod
+    Default: dev
+
+Resources:
+  # Create the REST API gateway
+  RestApi:
+    Type: AWS::ApiGateway::RestApi
+    Properties:
+      Name: !Sub ${ProjectName}-${Stage}-RestApiGw
+      MinimumCompressionSize: 0
+      EndpointConfiguration:
+        Types:
+          - EDGE
+  # Create the Cognito Authorizer for the REST API Gateway
+  RestApiCognitoAuthorizer:
+    Type: AWS::ApiGateway::Authorizer
+    Properties:
+      Name: CognitoAuthorizer
+      IdentitySource: method.request.header.Authorization
+      RestApiId: !Ref RestApi
+      Type: COGNITO_USER_POOLS
+      ProviderARNs:
+        - !ImportValue
+          Fn::Sub: ${ProjectName}-${Stage}-CognitoUserPool:Arn
+
+Outputs:
+  RestApi:
+    Value: !Ref RestApi
+    Export:
+      Name: !Sub ${ProjectName}-${Stage}-ApiGw:RestApiId
+  RestApiRootResourceId:
+    Value: !GetAtt RestApi.RootResourceId
+    Export:
+      Name: !Sub ${ProjectName}-${Stage}-ApiGw:RootResourceId
+  RestApiCognitoAuthorizerId:
+    Value: !Ref RestApiCognitoAuthorizer
+    Export:
+      Name: !Sub ${ProjectName}-${Stage}-ApiGw:CognitoAuthorizerId

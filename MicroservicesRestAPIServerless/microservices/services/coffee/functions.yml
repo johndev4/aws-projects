@@ -1,0 +1,119 @@
+# testFn:
+#   role:
+#     "Fn::ImportValue": "${self:custom.projectName}-${self:provider.stage}-MicroservicesFunctionRole:Arn"
+#   handler: test/index.handler
+
+insertCoffee:
+  role:
+    "Fn::ImportValue": "${self:custom.projectName}-${self:provider.stage}-MicroservicesFunctionRole:Arn"
+  handler: functions/insertCoffee/index.handler
+  vpc:
+    securityGroupIds:
+      - "Fn::ImportValue": "${self:custom.projectName}-${self:provider.stage}-Vpc:WebSecurityGroupId"
+    subnetIds:
+      - "Fn::ImportValue": "${self:custom.projectName}-${self:provider.stage}-Vpc:PrivateSubnetAId"
+      - "Fn::ImportValue": "${self:custom.projectName}-${self:provider.stage}-Vpc:PrivateSubnetBId"
+  layers:
+    - { Ref: NodeModulesLambdaLayer }
+  events:
+    - http:
+        path: /coffee/post
+        method: post
+        cors: true
+        authorizer:
+          type: COGNITO_USER_POOLS
+          scopes: email
+          authorizerId:
+            "Fn::ImportValue": "${self:custom.projectName}-${self:provider.stage}-ApiGw:CognitoAuthorizerId"
+
+getCoffee:
+  role:
+    "Fn::ImportValue": "${self:custom.projectName}-${self:provider.stage}-MicroservicesFunctionRole:Arn"
+  handler: functions/getCoffee/index.handler
+  vpc:
+    securityGroupIds:
+      - "Fn::ImportValue": "${self:custom.projectName}-${self:provider.stage}-Vpc:WebSecurityGroupId"
+    subnetIds:
+      - "Fn::ImportValue": "${self:custom.projectName}-${self:provider.stage}-Vpc:PrivateSubnetAId"
+      - "Fn::ImportValue": "${self:custom.projectName}-${self:provider.stage}-Vpc:PrivateSubnetBId"
+  layers:
+    - { Ref: NodeModulesLambdaLayer }
+  events:
+    - http:
+        path: /coffee/get/{id}
+        method: get
+        cors: true
+        authorizer:
+          type: COGNITO_USER_POOLS
+          scopes: email
+          authorizerId:
+            "Fn::ImportValue": "${self:custom.projectName}-${self:provider.stage}-ApiGw:CognitoAuthorizerId"
+
+getCoffeeList:
+  role:
+    "Fn::ImportValue": "${self:custom.projectName}-${self:provider.stage}-MicroservicesFunctionRole:Arn"
+  handler: functions/getCoffeeList/index.handler
+  vpc:
+    securityGroupIds:
+      - "Fn::ImportValue": "${self:custom.projectName}-${self:provider.stage}-Vpc:WebSecurityGroupId"
+    subnetIds:
+      - "Fn::ImportValue": "${self:custom.projectName}-${self:provider.stage}-Vpc:PrivateSubnetAId"
+      - "Fn::ImportValue": "${self:custom.projectName}-${self:provider.stage}-Vpc:PrivateSubnetBId"
+  layers:
+    - { Ref: NodeModulesLambdaLayer }
+  events:
+    - http:
+        path: /coffee/get/list
+        method: get
+        cors: true
+        authorizer:
+          type: COGNITO_USER_POOLS
+          scopes: email
+          authorizerId:
+            "Fn::ImportValue": "${self:custom.projectName}-${self:provider.stage}-ApiGw:CognitoAuthorizerId"
+
+updateCoffee:
+  role:
+    "Fn::ImportValue": "${self:custom.projectName}-${self:provider.stage}-MicroservicesFunctionRole:Arn"
+  handler: functions/updateCoffee/index.handler
+  vpc:
+    securityGroupIds:
+      - "Fn::ImportValue": "${self:custom.projectName}-${self:provider.stage}-Vpc:WebSecurityGroupId"
+    subnetIds:
+      - "Fn::ImportValue": "${self:custom.projectName}-${self:provider.stage}-Vpc:PrivateSubnetAId"
+      - "Fn::ImportValue": "${self:custom.projectName}-${self:provider.stage}-Vpc:PrivateSubnetBId"
+  layers:
+    - { Ref: NodeModulesLambdaLayer }
+  events:
+    - http:
+        path: /coffee/update/{id}
+        method: patch
+        cors: true
+        authorizer:
+          type: COGNITO_USER_POOLS
+          scopes: email
+          authorizerId:
+            "Fn::ImportValue": "${self:custom.projectName}-${self:provider.stage}-ApiGw:CognitoAuthorizerId"
+
+deleteCoffee:
+  role:
+    "Fn::ImportValue": "${self:custom.projectName}-${self:provider.stage}-MicroservicesFunctionRole:Arn"
+  handler: functions/deleteCoffee/index.handler
+  vpc:
+    securityGroupIds:
+      - "Fn::ImportValue": "${self:custom.projectName}-${self:provider.stage}-Vpc:WebSecurityGroupId"
+    subnetIds:
+      - "Fn::ImportValue": "${self:custom.projectName}-${self:provider.stage}-Vpc:PrivateSubnetAId"
+      - "Fn::ImportValue": "${self:custom.projectName}-${self:provider.stage}-Vpc:PrivateSubnetBId"
+  layers:
+    - { Ref: NodeModulesLambdaLayer }
+  events:
+    - http:
+        path: /coffee/delete/{id}
+        method: delete
+        cors: true
+        authorizer:
+          type: COGNITO_USER_POOLS
+          scopes: email
+          authorizerId:
+            "Fn::ImportValue": "${self:custom.projectName}-${self:provider.stage}-ApiGw:CognitoAuthorizerId"

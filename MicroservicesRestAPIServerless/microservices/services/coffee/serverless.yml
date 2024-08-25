@@ -1,0 +1,68 @@
+service: ${self:custom.projectName}-coffee
+frameworkVersion: "3"
+useDotEnv: true
+
+custom:
+  projectName: ${env:PROJECT_NAME, "offline"}
+  webpack:
+    webpackConfig: "./webpack.config.js"
+    packager: "npm"
+    includeModules: false # Use the node_modules from layer instead
+  serverless-offline:
+    httpPort: 5000
+    stage: dev
+    noAuth: true
+    useInProcess: true
+  dotenv:
+    path: ..\..\.env.${self:provider.stage, "dev"}
+    exclude:
+      - AWS_ACCESS_KEY_ID
+      - AWS_SECRET_ACCESS_KEY
+      - AWS_SESSION_TOKEN
+      - AWS_DEFAULT_REGION
+      - NODE_ENV
+      - PYTHONUNBUFFERED
+    required:
+      env:
+        - PROJECT_NAME
+        - STAGE
+      file: true
+provider:
+  name: aws
+  runtime: nodejs20.x
+  stage: ${opt:stage, "dev"}
+  region: ${opt:region, "ap-southeast-1"}
+  apiGateway:
+    restApiId:
+      "Fn::ImportValue": "${self:custom.projectName}-${self:provider.stage}-ApiGw:RestApiId"
+    restApiRootResourceId:
+      "Fn::ImportValue": "${self:custom.projectName}-${self:provider.stage}-ApiGw:RootResourceId"
+  environment:
+    PROJECT_NAME: ${self:custom.projectName}
+    STAGE: ${self:provider.stage}
+    REGION: ${self:provider.region}
+package:
+  individually: true
+  excludeDevDependencies: false
+  exclude:
+    - docker-compose.yml
+    - serverless.yml
+    - functions.yml
+    - package.json
+    - package-lock.json
+    - webpack.config.js
+    - node_modules/**
+plugins:
+  - serverless-webpack
+  - serverless-offline
+  - serverless-dotenv-plugin
+layers:
+  NodeModules:
+    name: ${self:service}-${self:provider.stage}-layer
+    path: layer
+    description: "Service function dependencies"
+    compatibleRuntimes:
+      - nodejs20.x
+    retain: false
+functions:
+  - ${file(functions.yml)}

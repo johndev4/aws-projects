@@ -1,0 +1,13 @@
+{
+  "resource": "/coffee/update/{id}",
+  "path": "/coffee/update/fad9d5e7-3115-4c0e-93f1-bfa1b12dbe34",
+  "httpMethod": "PATCH",
+  "queryStringParameters": null,
+  "multiValueQueryStringParameters": null,
+  "pathParameters": {
+    "id": "fad9d5e7-3115-4c0e-93f1-bfa1b12dbe34"
+  },
+  "stageVariables": null,
+  "body": "{\r\n    \"title\": \"Caramel Latte\",\r\n    \"description\": \"Om du gillar latte med en speciell smak kan karamell latte vara det bästa alternativet för att ge dig en upplevelse av den naturliga sötman och krämigheten hos ångad mjölk och karamell.\",\r\n    \"ingredients\": [\r\n        \"Espresso\",\r\n        \"Ångad mjölk\",\r\n        \"Karamellsirap\"\r\n    ]\r\n}",
+  "isBase64Encoded": false
+}

@@ -1,0 +1,105 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: Create Cognito User Pool with Hosted UI
+
+Parameters:
+  ProjectName:
+    Description: Name of the project
+    Type: String
+    Default: johncloud
+  Stage:
+    Description: An environment name that is prefixed to resource names
+    Type: String
+    AllowedValues:
+      - dev
+      - prod
+    Default: dev
+
+Resources:
+  # Create the User Pool
+  CognitoUserPool:
+    Type: AWS::Cognito::UserPool
+    Properties:
+      UserPoolName: !Sub ${ProjectName}-${Stage}-CognitoUserPool
+      AutoVerifiedAttributes:
+        - email
+      UsernameAttributes:
+        - email
+      Policies:
+        PasswordPolicy:
+          MinimumLength: 8
+          RequireUppercase: true
+          RequireLowercase: true
+          RequireNumbers: true
+          RequireSymbols: true
+      Schema:
+        - Name: email
+          Required: true
+          Mutable: false
+        - Name: preferred_username
+          Required: false
+          Mutable: false
+        - Name: name
+          Required: true
+          Mutable: true
+      MfaConfiguration: OPTIONAL
+      EnabledMfas:
+        - SOFTWARE_TOKEN_MFA
+      AccountRecoverySetting:
+        RecoveryMechanisms:
+          - Name: verified_email
+            Priority: 1
+      EmailConfiguration:
+        EmailSendingAccount: COGNITO_DEFAULT
+      AdminCreateUserConfig:
+        AllowAdminCreateUserOnly: false
+  # Use the Cognito Hosted UI
+  CognitoUserPoolClient:
+    Type: AWS::Cognito::UserPoolClient
+    Properties:
+      UserPoolId: !Ref CognitoUserPool
+      ClientName: !Sub ${ProjectName}-${Stage}-Client
+      GenerateSecret: true
+      RefreshTokenValidity: 30
+      CallbackURLs:
+        - http://localhost:4200/dashboard
+      SupportedIdentityProviders:
+        - COGNITO
+      AllowedOAuthFlowsUserPoolClient: true
+      AllowedOAuthFlows:
+        - code
+      AllowedOAuthScopes:
+        - email
+        - openid
+        - profile
+  # Configure the domain of the Hosted UI
+  CognitoUserPoolDomain:
+    Type: AWS::Cognito::UserPoolDomain
+    Properties:
+      Domain: !Sub ${ProjectName}app-${Stage}
+      UserPoolId: !Ref CognitoUserPool
+
+Outputs:
+  CognitoUserPoolId:
+    Value: !Ref CognitoUserPool
+    Description: Cognito User Pool ID
+    Export:
+      Name: !Join
+        - ":"
+        - - !Sub ${ProjectName}-${Stage}-CognitoUserPool
+          - Id
+  CognitoUserPoolClientId:
+    Value: !Ref CognitoUserPoolClient
+    Description: Cognito User Pool Client ID
+    Export:
+      Name: !Join
+        - ":"
+        - - !Sub ${ProjectName}-${Stage}-CognitoUserPoolClient
+          - Id
+  CognitoUserPoolArn:
+    Value: !GetAtt CognitoUserPool.Arn
+    Description: Cognito User Pool ARN
+    Export:
+      Name: !Join
+        - ":"
+        - - !Sub ${ProjectName}-${Stage}-CognitoUserPool
+          - Arn

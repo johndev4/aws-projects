@@ -1,2 +1,17 @@
 # Stores vscode config
 **/.vscode
+
+# dotenv and keys
+**/keys
+**/.*env
+**/.env*
+
+
+# Modules
+**/node_modules
+
+# Serverless Framwork
+**/.serverless
+
+# Webpack
+**/.webpack

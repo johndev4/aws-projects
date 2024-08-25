@@ -1,0 +1,22 @@
+version: "3"
+
+services:
+  coffee:
+    image: johncloud/aws-node-serverless-builder:latest
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    container_name: coffee-dev
+    working_dir: /microservices
+    mem_limit: 4g
+    memswap_limit: 4g
+    mem_swappiness: 0
+    volumes:
+      - ../services/coffee:/microservices/services/coffee
+      - ../scripts:/microservices/scripts
+      - /microservices/services/coffee/node_modules
+      - /microservices/services/coffee/layer/nodejs/node_modules
+    env_file:
+      - ../.env.dev
+    command: python3 /microservices/scripts/deploy.py coffee
+    # command: sh -c "echo \"Remove Coffee service\" && cd /microservices/services/coffee && serverless remove -s dev"

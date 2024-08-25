@@ -1,0 +1,57 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: Create a role for microservices lambda functions
+
+Parameters:
+  # Required for all templates
+  ProjectName:
+    Description: Name of the project
+    Type: String
+    Default: johncloud
+  Stage:
+    Description: An environment name that is prefixed to resource names
+    Type: String
+    AllowedValues: ["dev", "prod"]
+    Default: dev
+
+Resources:
+  MicroservicesFunctionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub ${ProjectName}-${Stage}-MicroservicesFunctionRole
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaDynamoDBExecutionRole
+  MicroserviceFnDynamoDBTableItemAccessPolicy:
+    Type: "AWS::IAM::Policy"
+    Properties:
+      PolicyName: !Sub ${ProjectName}-${Stage}-MicroserviceFnDynamoDBTableItemAccessPolicy
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: "Allow"
+            Action:
+              - "dynamodb:BatchGetItem"
+              - "dynamodb:BatchWriteItem"
+              - "dynamodb:ConditionCheckItem"
+              - "dynamodb:PutItem"
+              - "dynamodb:DeleteItem"
+              - "dynamodb:GetItem"
+              - "dynamodb:UpdateItem"
+              - "dynamodb:Scan"
+            Resource: "*"
+      Roles:
+        - !Ref MicroservicesFunctionRole
+
+Outputs:
+  LambdaExecutionRole:
+    Value: !GetAtt MicroservicesFunctionRole.Arn
+    Export:
+      Name: !Sub ${ProjectName}-${Stage}-MicroservicesFunctionRole:Arn
