@@ -1,4 +1,4 @@
-# Build a Full-Stack React Application with AWS Amplify
+# Full Stack React Web Application with AWS Amplify
 
 ### Deploy Amplify Cloud sandbox
 
