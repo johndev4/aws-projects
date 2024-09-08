@@ -76,7 +76,7 @@ if __name__ == "__main__":
     stacks = [
         {
             'name': f"{project_name}-{stage}-vpc",
-            'template_body': open('cf_templates/vpc.yaml').read(),
+            'template_body': open('cloudformation/templates/vpc.yaml').read(),
             'parameters': [
                 {'ParameterKey': 'ProjectName', 'ParameterValue': project_name},
                 {'ParameterKey': 'Stage', 'ParameterValue': stage}
@@ -84,7 +84,7 @@ if __name__ == "__main__":
         },
         {
             'name': f"{project_name}-{stage}-webSg",
-            'template_body': open('cf_templates/webSg.yaml').read(),
+            'template_body': open('cloudformation/templates/webSg.yaml').read(),
             'parameters': [
                 {'ParameterKey': 'ProjectName', 'ParameterValue': project_name},
                 {'ParameterKey': 'Stage', 'ParameterValue': stage}
@@ -92,7 +92,7 @@ if __name__ == "__main__":
         },
         {
             'name': f"{project_name}-{stage}-microservicesFunctionRole",
-            'template_body': open('cf_templates/microservicesFunctionRole.yaml').read(),
+            'template_body': open('cloudformation/templates/microservicesFunctionRole.yaml').read(),
             'parameters': [
                 {'ParameterKey': 'ProjectName', 'ParameterValue': project_name},
                 {'ParameterKey': 'Stage', 'ParameterValue': stage}
@@ -101,7 +101,7 @@ if __name__ == "__main__":
         },
         {
             'name': f"{project_name}-{stage}-cognitoUserPool",
-            'template_body': open('cf_templates/cognitoUserPool.yaml').read(),
+            'template_body': open('cloudformation/templates/cognitoUserPool.yaml').read(),
             'parameters': [
                 {'ParameterKey': 'ProjectName', 'ParameterValue': project_name},
                 {'ParameterKey': 'Stage', 'ParameterValue': stage}
@@ -109,7 +109,7 @@ if __name__ == "__main__":
         },
         {
             'name': f"{project_name}-{stage}-restApiGw",
-            'template_body': open('cf_templates/restApiGw.yaml').read(),
+            'template_body': open('cloudformation/templates/restApiGw.yaml').read(),
             'parameters': [
                 {'ParameterKey': 'ProjectName', 'ParameterValue': project_name},
                 {'ParameterKey': 'Stage', 'ParameterValue': stage}
@@ -117,7 +117,7 @@ if __name__ == "__main__":
         },
         {
             'name': f"{project_name}-{stage}-coffeeDdbTable",
-            'template_body': open('cf_templates/coffeeDdbTable.yaml').read(),
+            'template_body': open('cloudformation/templates/coffeeDdbTable.yaml').read(),
             'parameters': [
                 {'ParameterKey': 'ProjectName', 'ParameterValue': project_name},
                 {'ParameterKey': 'Stage', 'ParameterValue': stage}
