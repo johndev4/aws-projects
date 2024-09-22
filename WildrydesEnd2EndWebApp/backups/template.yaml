@@ -1,0 +1,134 @@
+Transform: AWS::Serverless-2016-10-31
+Resources:
+  WebsiteBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub ${AWS::StackName}-website-${AWS::AccountId}
+      WebsiteConfiguration:
+        IndexDocument: index.html
+      PublicAccessBlockConfiguration:
+        IgnorePublicAcls: false
+        RestrictPublicBuckets: false
+  WebsiteBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref WebsiteBucket
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal: '*'
+            Action:
+              - s3:GetObject
+            Resource: !Join
+              - ''
+              - - 'arn:aws:s3:::'
+                - !Ref WebsiteBucket
+                - /*
+  UserPool:
+    Type: AWS::Cognito::UserPool
+    Properties:
+      AdminCreateUserConfig:
+        AllowAdminCreateUserOnly: false
+      AliasAttributes:
+        - preferred_username
+      UserPoolName: !Sub ${AWS::StackName}-UserPool
+      AutoVerifiedAttributes:
+        - email
+  UserPoolClient:
+    Type: AWS::Cognito::UserPoolClient
+    Properties:
+      UserPoolId: !Ref UserPool
+  RestApi:
+    Type: AWS::Serverless::Api
+    Properties:
+      Name: !Sub
+        - ${AWS::StackName}-${ResourceName}
+        - ResourceName: RestApi
+      StageName: Dev
+      DefinitionBody: !Transform
+        Name: AWS::Include
+        Parameters:
+          Location: api.yaml
+      EndpointConfiguration: EDGE
+      TracingEnabled: false
+      Auth:
+        Authorizers:
+          WildrydesAuthorizer:
+            UserPoolArn: !GetAtt UserPool.Arn
+      Cors:
+        MaxAge: 5
+        AllowOrigin: '''*'''
+        AllowHeaders: '''Content-Type, X-Amz-Date, Authorization, X-Api-Key,
+          X-Amz-Security-Token'''
+  RequestUnicornFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Description: !Sub
+        - Stack ${AWS::StackName} Function ${ResourceName}
+        - ResourceName: RequestUnicornFunction
+      CodeUri: src/functions/RequestUnicorn
+      Handler: index.handler
+      Runtime: nodejs20.x
+      MemorySize: 3008
+      Timeout: 6
+      Tracing: Active
+      Environment:
+        Variables:
+          RIDES_TABLE_NAME: !Ref Rides
+          RIDES_TABLE_ARN: !GetAtt Rides.Arn
+      Policies:
+        - DynamoDBWritePolicy:
+            TableName: !Ref Rides
+      Layers:
+        - !Ref FunctionsLayer
+      Events:
+        RestApiPOSTride:
+          Type: Api
+          Properties:
+            Path: /ride
+            Method: POST
+            RestApiId: !Ref RestApi
+  RequestUnicornFunctionLogGroup:
+    Type: AWS::Logs::LogGroup
+    DeletionPolicy: Retain
+    Properties:
+      LogGroupName: !Sub /aws/lambda/${RequestUnicornFunction}
+  Rides:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      AttributeDefinitions:
+        - AttributeName: RideId
+          AttributeType: S
+      BillingMode: PAY_PER_REQUEST
+      KeySchema:
+        - AttributeName: RideId
+          KeyType: HASH
+      StreamSpecification:
+        StreamViewType: NEW_AND_OLD_IMAGES
+  FunctionsLayer:
+    Type: AWS::Serverless::LayerVersion
+    Properties:
+      Description: !Sub
+        - Stack ${AWS::StackName} Layer ${ResourceName}
+        - ResourceName: FunctionsLayer
+      ContentUri: src/layers/nodejs
+      RetentionPolicy: Delete
+    Metadata:
+      BuildMethod: nodejs20.x
+Metadata:
+  AWS::Composer::Groups:
+    Group:
+      Label: User Authentication
+      Members:
+        - UserPoolClient
+        - UserPool
+    Group2:
+      Label: Compute
+      Members:
+        - RequestUnicornFunction
+        - FunctionsLayer
+    Group3:
+      Label: Databases
+      Members:
+        - Rides
