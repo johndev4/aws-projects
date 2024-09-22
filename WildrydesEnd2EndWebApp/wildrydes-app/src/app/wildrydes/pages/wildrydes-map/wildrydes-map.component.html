@@ -1,0 +1,12 @@
+<div class="absolute-bottom">
+  <button
+    mat-flat-button
+    (click)="requestUnicorn()"
+    [disabled]="!selectedPoint"
+  >
+    Request Unicorn
+  </button>
+</div>
+
+<!-- Map Div -->
+<div #mapViewNode></div>

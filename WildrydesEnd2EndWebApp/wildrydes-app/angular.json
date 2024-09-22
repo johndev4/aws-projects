@@ -1,0 +1,103 @@
+{
+  "$schema": "./node_modules/@angular/cli/lib/config/schema.json",
+  "version": 1,
+  "newProjectRoot": "projects",
+  "projects": {
+    "wildrydes-app": {
+      "projectType": "application",
+      "schematics": {},
+      "root": "",
+      "sourceRoot": "src",
+      "prefix": "app",
+      "architect": {
+        "build": {
+          "builder": "@ngx-env/builder:application",
+          "options": {
+            "outputPath": "dist/wildrydes-app",
+            "index": "src/index.html",
+            "browser": "src/main.ts",
+            "polyfills": ["src/zone-flags.ts", "zone.js", "src/polyfills.ts"],
+            "tsConfig": "tsconfig.app.json",
+            "assets": [
+              {
+                "glob": "**/*",
+                "input": "public"
+              }
+            ],
+            "styles": [
+              "@angular/material/prebuilt-themes/azure-blue.css",
+              "node_modules/@aws-amplify/ui-angular/theme.css",
+              "src/styles/main.css",
+              "src/styles/amplify-ui.css",
+              "src/styles/material.css",
+              "src/styles/esri-map.css"
+            ],
+            "scripts": []
+          },
+          "configurations": {
+            "prod": {
+              "budgets": [
+                {
+                  "type": "initial",
+                  "maximumWarning": "2mb",
+                  "maximumError": "3mb"
+                },
+                {
+                  "type": "anyComponentStyle",
+                  "maximumWarning": "2kB",
+                  "maximumError": "4kB"
+                }
+              ],
+              "outputHashing": "all"
+            },
+            "dev": {
+              "optimization": false,
+              "extractLicenses": false,
+              "sourceMap": true,
+              "fileReplacements": [
+                {
+                  "replace": "src/environments/environment.ts",
+                  "with": "src/environments/environment.dev.ts"
+                }
+              ]
+            }
+          },
+          "defaultConfiguration": "prod"
+        },
+        "serve": {
+          "builder": "@ngx-env/builder:dev-server",
+          "configurations": {
+            "prod": {
+              "buildTarget": "wildrydes-app:build:prod"
+            },
+            "dev": {
+              "buildTarget": "wildrydes-app:build:dev"
+            }
+          },
+          "defaultConfiguration": "dev"
+        },
+        "extract-i18n": {
+          "builder": "@ngx-env/builder:extract-i18n"
+        },
+        "test": {
+          "builder": "@ngx-env/builder:karma",
+          "options": {
+            "polyfills": ["zone.js", "zone.js/testing"],
+            "tsConfig": "tsconfig.spec.json",
+            "assets": [
+              {
+                "glob": "**/*",
+                "input": "public"
+              }
+            ],
+            "styles": ["src/styles.css"],
+            "scripts": []
+          }
+        }
+      }
+    }
+  },
+  "cli": {
+    "analytics": false
+  }
+}
