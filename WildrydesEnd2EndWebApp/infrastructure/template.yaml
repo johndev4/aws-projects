@@ -1,44 +1,26 @@
 Transform: AWS::Serverless-2016-10-31
 Resources:
-  WebsiteBucket:
-    Type: AWS::S3::Bucket
-    Properties:
-      BucketName: !Sub ${AWS::StackName}-website-${AWS::AccountId}
-      WebsiteConfiguration:
-        IndexDocument: index.html
-      PublicAccessBlockConfiguration:
-        IgnorePublicAcls: false
-        RestrictPublicBuckets: false
-  WebsiteBucketPolicy:
-    Type: AWS::S3::BucketPolicy
-    Properties:
-      Bucket: !Ref WebsiteBucket
-      PolicyDocument:
-        Version: '2012-10-17'
-        Statement:
-          - Effect: Allow
-            Principal: '*'
-            Action:
-              - s3:GetObject
-            Resource: !Join
-              - ''
-              - - 'arn:aws:s3:::'
-                - !Ref WebsiteBucket
-                - /*
   UserPool:
     Type: AWS::Cognito::UserPool
     Properties:
       AdminCreateUserConfig:
         AllowAdminCreateUserOnly: false
-      AliasAttributes:
-        - preferred_username
+      UsernameAttributes:
+        - email
       UserPoolName: !Sub ${AWS::StackName}-UserPool
       AutoVerifiedAttributes:
         - email
+      UserAttributeUpdateSettings:
+        AttributesRequireVerificationBeforeUpdate:
+          - email
   UserPoolClient:
     Type: AWS::Cognito::UserPoolClient
     Properties:
       UserPoolId: !Ref UserPool
+      GenerateSecret: false
+      ExplicitAuthFlows:
+        - ALLOW_REFRESH_TOKEN_AUTH
+        - ALLOW_USER_SRP_AUTH
   RestApi:
     Type: AWS::Serverless::Api
     Properties:
@@ -116,6 +98,77 @@ Resources:
       RetentionPolicy: Delete
     Metadata:
       BuildMethod: nodejs20.x
+  CloudFrontOriginAccessControl:
+    Type: AWS::CloudFront::OriginAccessControl
+    Properties:
+      OriginAccessControlConfig:
+        Name: !Sub ${AWS::StackName}-OAC
+        OriginAccessControlOriginType: s3
+        SigningBehavior: always
+        SigningProtocol: sigv4
+  Distribution:
+    Type: AWS::CloudFront::Distribution
+    Properties:
+      DistributionConfig:
+        Origins:
+          - DomainName: !GetAtt WildrydesAppBucket.RegionalDomainName
+            Id: myS3Origin
+            S3OriginConfig: {}
+            OriginAccessControlId: !GetAtt CloudFrontOriginAccessControl.Id
+        Enabled: true
+        DefaultCacheBehavior:
+          AllowedMethods:
+            - GET
+            - HEAD
+            - OPTIONS
+          TargetOriginId: myS3Origin
+          ForwardedValues:
+            QueryString: false
+            Cookies:
+              Forward: none
+          ViewerProtocolPolicy: redirect-to-https
+        DefaultRootObject: index.html
+        HttpVersion: http2
+        PriceClass: PriceClass_100
+        ViewerCertificate:
+          CloudFrontDefaultCertificate: true
+        CustomErrorResponses:
+          - ErrorCode: 403
+            ResponseCode: 200
+            ResponsePagePath: /index.html
+          - ErrorCode: 404
+            ResponseCode: 200
+            ResponsePagePath: /index.html
+  WildrydesAppBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub ${AWS::StackName}-app-bucket-${AWS::AccountId}
+  WildrydesAppBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref WildrydesAppBucket
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Sid: AllowCloudFrontServicePrincipal
+            Effect: Allow
+            Principal:
+              Service: cloudfront.amazonaws.com
+            Action: s3:GetObject
+            Resource: !Sub ${WildrydesAppBucket.Arn}/*
+            Condition:
+              StringEquals:
+                AWS:SourceArn: !Sub arn:aws:cloudfront::${AWS::AccountId}:distribution/${Distribution}
+Outputs:
+  BucketName:
+    Description: Name of the S3 bucket
+    Value: !Ref WildrydesAppBucket
+  DistributionId:
+    Description: ID of the CloudFront distribution
+    Value: !Ref Distribution
+  DistributionDomainName:
+    Description: Domain name of the CloudFront distribution
+    Value: !GetAtt Distribution.DomainName
 Metadata:
   AWS::Composer::Groups:
     Group:
@@ -126,9 +179,14 @@ Metadata:
     Group2:
       Label: Compute
       Members:
-        - RequestUnicornFunction
         - FunctionsLayer
+        - RequestUnicornFunction
     Group3:
       Label: Databases
       Members:
         - Rides
+    Group4:
+      Label: Client
+      Members:
+        - Distribution
+        - WildrydesAppBucket
