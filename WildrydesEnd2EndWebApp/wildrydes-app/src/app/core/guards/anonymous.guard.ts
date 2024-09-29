@@ -15,10 +15,10 @@ export const anonymousGuard: CanActivateFn = (route, state) => {
             : state.authStatus === 'unauthenticated'
             ? false
             : 'configuring';
-            console.log('Auth Status:', isAuthenticated ? '✅' : '❌');
+        console.log('Auth Status:', isAuthenticated ? '✅' : '❌');
 
         if (isAuthenticated === true) {
-          router.navigateByUrl('app');
+          router.navigateByUrl('app/wildrydes/map');
           resolve(false);
         }
 

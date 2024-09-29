@@ -16,37 +16,51 @@ import PictureMarkerSymbol from '@arcgis/core/symbols/PictureMarkerSymbol';
 import * as webMercatorUtils from '@arcgis/core/geometry/support/webMercatorUtils';
 import { MatButtonModule } from '@angular/material/button';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { catchError, NEVER } from 'rxjs';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 
 @Component({
   selector: 'app-wildrydes-map',
   standalone: true,
-  imports: [RouterModule, MatButtonModule],
+  imports: [RouterModule, MatButtonModule, MatProgressSpinnerModule],
   templateUrl: './wildrydes-map.component.html',
   styleUrl: './wildrydes-map.component.css',
   providers: [UnicornService],
 })
 export class WildrydesMapComponent implements OnInit, OnDestroy {
   requestUnicorn() {
+    this.isLoading = true;
     const body = JSON.parse(
       '{"PickupLocation":{"Latitude":47.6174755835663,"Longitude":-122.28837066650185}}'
     );
-    this._unicornService.requestUnicorn(body).subscribe((data) => {
-      console.log('Response received from API: ', data);
+    this._unicornService
+      .requestUnicorn(body)
+      .pipe(
+        catchError((err) => {
+          this.isLoading = false;
+          return NEVER;
+        })
+      )
+      .subscribe((data) => {
+        console.log('Response received from API: ', data);
 
-      this.animateArrival(() => {
-        var unicorn = data.Unicorn;
-        var pronoun = unicorn.Gender === 'Male' ? 'his' : 'her';
+        this.animateArrival(() => {
+          var unicorn = data.Unicorn;
+          var pronoun = unicorn.Gender === 'Male' ? 'his' : 'her';
 
-        this._snackBar.open(
-          `${unicorn.Name}, your ${unicorn.Color}unicorn, is on${pronoun} way.`,
-          'Dismiss',
-          { duration: 10000 }
-        );
+          this._snackBar.open(
+            `${unicorn.Name}, your ${unicorn.Color}unicorn, is on${pronoun} way.`,
+            'Dismiss',
+            { duration: 10000 }
+          );
 
-        this.unsetLocation();
+          this.unsetLocation();
+          this.isLoading = false;
+        });
       });
-    });
   }
+
+  isLoading: boolean = false;
 
   protected view!: MapView;
   protected pinGraphic!: Graphic;

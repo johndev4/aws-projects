@@ -1,10 +1,11 @@
 import { Component } from '@angular/core';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 
 @Component({
   selector: 'app-auth',
   standalone: true,
-  imports: [],
-  template: `<img src="/images/loading.gif" alt="loading" width="50px" />`,
+  imports: [MatProgressSpinnerModule],
+  template: `<mat-spinner></mat-spinner>`,
   styles: ``,
 })
 export class AuthComponent {}

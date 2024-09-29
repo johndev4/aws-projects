@@ -5,7 +5,7 @@ export const routes: Routes = [
   {
     path: '',
     pathMatch: 'full',
-    redirectTo: 'wildrydes',
+    redirectTo: 'home',
   },
   {
     path: 'app',
@@ -13,7 +13,7 @@ export const routes: Routes = [
       import('./wildrydes/wildrydes.module').then((m) => m.WildrydesModule),
   },
   {
-    path: 'wildrydes',
+    path: 'home',
     loadComponent: () =>
       import('./pages/home/home.component').then((c) => c.HomeComponent),
     canActivate: [publicHomeRedirectGuard],

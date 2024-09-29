@@ -1,5 +1,5 @@
-import { Component } from '@angular/core';
-import { RouterOutlet } from '@angular/router';
+import { Component, OnInit } from '@angular/core';
+import { Router, RouterOutlet } from '@angular/router';
 import { Amplify } from 'aws-amplify';
 import {
   AmplifyAuthenticatorModule,
@@ -9,7 +9,8 @@ import { environment } from '../environments/environment';
 import { JsonPipe } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
 import { MatMenuModule } from '@angular/material/menu';
-import { MatIcon } from '@angular/material/icon';
+import { MatIconModule } from '@angular/material/icon';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 
 Amplify.configure({
   Auth: {
@@ -29,11 +30,25 @@ Amplify.configure({
     JsonPipe,
     MatButtonModule,
     MatMenuModule,
-    MatIcon,
+    MatIconModule,
+    MatProgressSpinnerModule,
   ],
   templateUrl: './app.component.html',
   styleUrl: './app.component.css',
 })
-export class AppComponent {
-  constructor(protected authenticator: AuthenticatorService) {}
+export class AppComponent implements OnInit {
+  checkingRedirect: boolean = false;
+  constructor(
+    protected authenticator: AuthenticatorService,
+    private _router: Router
+  ) {}
+
+  ngOnInit(): void {
+    if (this._router.url.split('/')?.[1] === 'app') {
+      this.checkingRedirect = true;
+      setTimeout(() => {
+        this.checkingRedirect = false;
+      }, 1000);
+    }
+  }
 }

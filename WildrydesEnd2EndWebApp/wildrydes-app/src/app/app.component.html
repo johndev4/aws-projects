@@ -3,6 +3,7 @@
   <amplify-authenticator
     [loginMechanisms]="['email']"
     initialState="signUp"
+    [hidden]="checkingRedirect"
   ></amplify-authenticator>
 </div>
 } @else if (authenticator.authStatus === 'authenticated') {
@@ -43,3 +44,9 @@
 </section>
 <router-outlet></router-outlet>
 }
+
+<span class="loading">
+  @if (checkingRedirect) {
+  <mat-spinner></mat-spinner>
+  }
+</span>

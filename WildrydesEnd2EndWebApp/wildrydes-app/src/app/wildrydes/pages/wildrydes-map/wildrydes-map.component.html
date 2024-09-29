@@ -2,9 +2,13 @@
   <button
     mat-flat-button
     (click)="requestUnicorn()"
-    [disabled]="!selectedPoint"
+    [disabled]="!selectedPoint || isLoading === true"
   >
-    Request Unicorn
+    @if (isLoading === true) {
+    <mat-spinner [diameter]="20"></mat-spinner>
+    } @else {
+    <span>Request Unicorn</span>
+    }
   </button>
 </div>
 
