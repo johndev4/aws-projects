@@ -4,6 +4,8 @@ on:
   push:
     branches:
       - wildrydes-end2end-web-app
+    paths:
+      - "WildrydesEnd2EndWebApp/wildrydes-app/**"
 
 jobs:
   build-wildrydes:
