@@ -1,0 +1,52 @@
+@if (authenticator.authStatus === 'unauthenticated') {
+<div class="pt-5">
+  <amplify-authenticator
+    [loginMechanisms]="['email']"
+    initialState="signUp"
+    [hidden]="checkingRedirect"
+  ></amplify-authenticator>
+</div>
+} @else if (authenticator.authStatus === 'authenticated') {
+<section class="container-fluid tool-bar">
+  <article class="d-flex align-items-center justify-content-between">
+    <h4 class="mt-2">
+      <a
+        href="wildrydes"
+        target="_blank"
+        rel="noopener noreferrer"
+        style="color: #000; text-decoration: none"
+      >
+        <img src="/images/logo.png" alt="icon" />
+      </a>
+    </h4>
+    <div class="d-block">
+      <button
+        mat-icon-button
+        [matMenuTriggerFor]="menu"
+        aria-label="Example icon-button with a menu"
+      >
+        <mat-icon>more_vert</mat-icon>
+      </button>
+      <mat-menu #menu="matMenu">
+        <button mat-menu-item disabled>
+          <mat-icon>account_circle</mat-icon>
+          <span>{{
+            authenticator.user.signInDetails?.loginId || "NO_USER"
+          }}</span>
+        </button>
+        <button mat-menu-item (click)="authenticator.signOut()">
+          <mat-icon>logout</mat-icon>
+          <span>Sign Out</span>
+        </button>
+      </mat-menu>
+    </div>
+  </article>
+</section>
+<router-outlet></router-outlet>
+}
+
+<span class="loading">
+  @if (checkingRedirect) {
+  <mat-spinner></mat-spinner>
+  }
+</span>

@@ -1,1 +1,17 @@
 **/*_.md
+
+# Serverless Framwork
+**/.serverless
+
+# Webpack
+**/.webpack
+
+# dotenv
+**/.*env
+**/.env*
+
+# Node
+**/node_modules
+**/npm-debug.log
+**/yarn-error.log
+**/.npm

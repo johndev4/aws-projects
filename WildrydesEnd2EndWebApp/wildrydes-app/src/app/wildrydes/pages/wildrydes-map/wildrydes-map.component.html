@@ -1,0 +1,16 @@
+<div class="absolute-bottom">
+  <button
+    mat-flat-button
+    (click)="requestUnicorn()"
+    [disabled]="!selectedPoint || isLoading === true"
+  >
+    @if (isLoading === true) {
+    <mat-spinner [diameter]="20"></mat-spinner>
+    } @else {
+    <span>Request Unicorn</span>
+    }
+  </button>
+</div>
+
+<!-- Map Div -->
+<div #mapViewNode></div>
