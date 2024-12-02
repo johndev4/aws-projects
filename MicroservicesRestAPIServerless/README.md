@@ -4,6 +4,8 @@ One of the key challenges in modern software dev is managing the complexity and 
 
 In this project, we’ll build a robust and scalable microservices-based REST API using the Serverless Framework, AWS services, and Node.js. Our goal is to create a flexible architecture that allows for easy deployment, efficient scaling, and seamless integration with other services.
 
+![image](./assets/microservices-serverless.drawio.png)
+
 ### Key Components:
 
 1. Serverless Framework: We’ll leverage the Serverless Framework to define our infrastructure as code (IaC). This framework simplifies the process of deploying serverless microservices by managing AWS resources, such as Lambda functions.
@@ -25,3 +27,15 @@ In this project, we’ll build a robust and scalable microservices-based REST AP
    - AWS IAM: We’ll configure fine-grained permissions using Identity and Access Management (IAM) roles.
 
    - AWS CloudFormation: We’ll use CloudFormation to model and provision our AWS resources, such as VPCs, policies, DynamoDB tables, and REST API Gateways. It is also used by the Serverless Framework under the hood to provision our Lambda functions and other AWS resources.
+
+   - Amazon RDS (Relational Database Service): Managed database service that makes it easier to set up, operate, and scale relational databases in the cloud. It handles routine database tasks like provisioning, patching, backup, recovery, failure detection, and repair.
+
+   - RDS Proxy: Fully managed database proxy feature for Amazon RDS that makes applications more scalable, resilient, and secure. Here are its key benefits:
+
+     1. Connection Pooling and Management
+
+     2. Enhanced Security
+
+     3. Improved Availability
+
+
