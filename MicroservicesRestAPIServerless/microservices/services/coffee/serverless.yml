@@ -43,7 +43,7 @@ provider:
     REGION: ${self:provider.region}
 package:
   individually: true
-  excludeDevDependencies: false
+  excludeDevDependencies: true
   exclude:
     - docker-compose.yml
     - serverless.yml
@@ -66,3 +66,56 @@ layers:
     retain: false
 functions:
   - ${file(functions.yml)}
+
+resources:
+  Resources:
+    CoffeesTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:custom.projectName}-${self:provider.stage}-Coffees
+        TableClass: STANDARD_INFREQUENT_ACCESS # Consider STANDARD if frequent access is needed
+        AttributeDefinitions:
+          - AttributeName: id
+            AttributeType: S
+        BillingMode: PROVISIONED # Change if you have predictable workloads
+        ProvisionedThroughput:
+          ReadCapacityUnits: 5
+          WriteCapacityUnits: 5
+        TimeToLiveSpecification: # Add TTL if data doesn't need to be kept indefinitely
+          AttributeName: ttl
+          Enabled: true
+        KeySchema:
+          - AttributeName: id
+            KeyType: HASH
+        StreamSpecification:
+          StreamViewType: NEW_AND_OLD_IMAGES
+        Tags: # Add tags for better resource management
+          - Key: Environment
+            Value: ${self:provider.stage}
+          - Key: Project
+            Value: ${self:custom.projectName}
+
+    CoffeeTableItemAccessPolicy:
+      Type: AWS::IAM::Policy
+      Properties:
+        PolicyName: ${self:custom.projectName}-${self:provider.stage}-CoffeeTableItemAccessPolicy
+        PolicyDocument:
+          Version: "2012-10-17"
+          Statement:
+            - Effect: Allow
+              Action:
+                - dynamodb:BatchGetItem
+                - dynamodb:BatchWriteItem
+                - dynamodb:PutItem
+                - dynamodb:DeleteItem
+                - dynamodb:GetItem
+                - dynamodb:UpdateItem
+                - dynamodb:Scan
+              Resource:
+                - !GetAtt CoffeesTable.Arn
+                - !Join ["", [!GetAtt CoffeesTable.Arn, "/index/*"]] # Include GSI if needed
+              Condition: # Add conditions for better security
+                StringEquals:
+                  "aws:RequestedRegion": ${self:provider.region}
+        Roles:
+          - "${self:custom.projectName}-${self:provider.stage}-MicroservicesFunctionRole"

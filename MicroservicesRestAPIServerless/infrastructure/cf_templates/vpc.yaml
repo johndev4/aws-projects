@@ -1,8 +1,7 @@
 AWSTemplateFormatVersion: "2010-09-09"
-Description: Create a VPC with public and private subnets
+Description: VPC setup including endpoints for serverless application
 
 Parameters:
-  # Required for all templates
   ProjectName:
     Description: Name of the project
     Type: String
@@ -14,7 +13,6 @@ Parameters:
       - dev
       - prod
     Default: dev
-  # Custom for VPC template
   VpcCIDR:
     Description: IP range (CIDR notation) for this VPC
     Type: String
@@ -63,7 +61,15 @@ Resources:
       InternetGatewayId: !Ref IGW
       VpcId: !Ref VPC
 
-  # Public Subnets Route
+  # Public & Private VPC Routes
+  PrivateRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: !Sub ${ProjectName}-${Stage}-PrivateRouteTable
+
   PublicRouteTable:
     Type: AWS::EC2::RouteTable
     Properties:
@@ -77,6 +83,8 @@ Resources:
       RouteTableId: !Ref PublicRouteTable
       DestinationCidrBlock: 0.0.0.0/0
       GatewayId: !Ref IGW
+
+  # Public & Private VPC Subnets
   PublicSubnetA:
     Type: AWS::EC2::Subnet
     Properties:
@@ -108,14 +116,6 @@ Resources:
       RouteTableId: !Ref PublicRouteTable
       SubnetId: !Ref PublicSubnetB
 
-  # Public Subnets Route
-  PrivateRouteTable:
-    Type: AWS::EC2::RouteTable
-    Properties:
-      VpcId: !Ref VPC
-      Tags:
-        - Key: Name
-          Value: !Sub ${ProjectName}-${Stage}-PrivateRouteTable
   PrivateSubnetA:
     Type: AWS::EC2::Subnet
     Properties:
@@ -145,7 +145,7 @@ Resources:
       RouteTableId: !Ref PrivateRouteTable
       SubnetId: !Ref PrivateSubnetB
 
-  # VPC Endpoint for DynamoDB
+  # VPC Endpoints
   DynamoDBVPCEndpoint:
     Type: AWS::EC2::VPCEndpoint
     Properties:
@@ -176,3 +176,7 @@ Outputs:
     Value: !Ref PrivateSubnetB
     Export:
       Name: !Sub ${ProjectName}-${Stage}-Vpc:PrivateSubnetBId
+  VpcCIDR:
+    Value: !Ref VpcCIDR
+    Export:
+      Name: !Sub ${ProjectName}-${Stage}-Vpc:CIDR

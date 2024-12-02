@@ -1,5 +1,6 @@
 AWSTemplateFormatVersion: "2010-09-09"
-Description: Create Cognito User Pool with Hosted UI
+Description: RESTFul API gateway and authorizer, and microservices lambda role
+  for serverless application
 
 Parameters:
   ProjectName:
@@ -15,7 +16,6 @@ Parameters:
     Default: dev
 
 Resources:
-  # Create the User Pool
   CognitoUserPool:
     Type: AWS::Cognito::UserPool
     Properties:
@@ -52,7 +52,7 @@ Resources:
         EmailSendingAccount: COGNITO_DEFAULT
       AdminCreateUserConfig:
         AllowAdminCreateUserOnly: false
-  # Use the Cognito Hosted UI
+
   CognitoUserPoolClient:
     Type: AWS::Cognito::UserPoolClient
     Properties:
@@ -71,12 +71,58 @@ Resources:
         - email
         - openid
         - profile
-  # Configure the domain of the Hosted UI
+
   CognitoUserPoolDomain:
     Type: AWS::Cognito::UserPoolDomain
     Properties:
       Domain: !Sub ${ProjectName}app-${Stage}
       UserPoolId: !Ref CognitoUserPool
+
+  # REST API gateway
+  RestApi:
+    Type: AWS::ApiGateway::RestApi
+    Properties:
+      Name: !Sub ${ProjectName}-${Stage}-RestApiGw
+      MinimumCompressionSize: 0
+      EndpointConfiguration:
+        Types:
+          - EDGE
+
+  RestApiCognitoAuthorizer:
+    Type: AWS::ApiGateway::Authorizer
+    Properties:
+      Name: CognitoAuthorizer
+      IdentitySource: method.request.header.Authorization
+      RestApiId: !Ref RestApi
+      Type: COGNITO_USER_POOLS
+      ProviderARNs:
+        - !GetAtt CognitoUserPool.Arn
+
+  # Microservices Lambda Function Execution Role
+  MicroservicesFunctionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub ${ProjectName}-${Stage}-MicroservicesFunctionRole
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaDynamoDBExecutionRole
+
+  # Security Groups
+  WebSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Security Group for microservices lambda functions
+      GroupName: WebSecurityGroup
+      VpcId: !ImportValue
+        Fn::Sub: ${ProjectName}-${Stage}-Vpc:Id
 
 Outputs:
   CognitoUserPoolId:
@@ -103,3 +149,40 @@ Outputs:
         - ":"
         - - !Sub ${ProjectName}-${Stage}-CognitoUserPool
           - Arn
+
+  RestApi:
+    Value: !Ref RestApi
+    Export:
+      Name: !Sub ${ProjectName}-${Stage}-ApiGw:RestApiId
+  RestApiRootResourceId:
+    Value: !GetAtt RestApi.RootResourceId
+    Export:
+      Name: !Sub ${ProjectName}-${Stage}-ApiGw:RootResourceId
+  RestApiCognitoAuthorizerId:
+    Value: !Ref RestApiCognitoAuthorizer
+    Export:
+      Name: !Sub ${ProjectName}-${Stage}-ApiGw:CognitoAuthorizerId
+
+  MicroservicesFunctionRoleArn:
+    Value: !GetAtt MicroservicesFunctionRole.Arn
+    Export:
+      Name: !Sub ${ProjectName}-${Stage}-MicroservicesFunctionRole:Arn
+
+  WebSecurityGroup:
+    Value: !Ref WebSecurityGroup
+    Export:
+      Name: !Sub ${ProjectName}-${Stage}-Vpc:WebSecurityGroupId
+
+Metadata:
+  AWS::Composer::Groups:
+    Group1:
+      Label: Cognito User Pool
+      Members:
+        - CognitoUserPoolClient
+        - CognitoUserPool
+        - CognitoUserPoolDomain
+    Group2:
+      Label: API
+      Members:
+        - RestApi
+        - RestApiCognitoAuthorizer
