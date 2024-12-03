@@ -20,3 +20,22 @@ services:
       - ../.env.dev
     command: python3 /microservices/scripts/deploy.py coffee
     # command: sh -c "echo \"Remove Coffee service\" && cd /microservices/services/coffee && serverless remove -s dev"
+  employee:
+    image: johncloud/aws-node-serverless-builder:latest
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    container_name: employee-demo
+    working_dir: /microservices
+    mem_limit: 4g
+    memswap_limit: 4g
+    mem_swappiness: 0
+    volumes:
+      - ../services/employee:/microservices/services/employee
+      - ../scripts:/microservices/scripts
+      - /microservices/services/employee/node_modules
+      - /microservices/services/employee/layer/nodejs/node_modules
+    env_file:
+      - ../.env.dev
+    command: python3 /microservices/scripts/deploy.py employee
+    # command: sh -c "echo \"Remove Coffee service\" && cd /microservices/services/employee && serverless remove -s dev"

@@ -3,6 +3,7 @@
 const { extractUserDetails } = require("../../lib/helpers/auth");
 const { insertDdbItem } = require("../../lib/helpers/awsDdb");
 const { handleSuccess, handleError } = require("../../lib/helpers/response");
+const { getEmployeeIdByEmail } = require("../../lib/services/employee");
 const config = require("../../lib/utils/config");
 
 module.exports.handler = async (event) => {
@@ -21,9 +22,17 @@ module.exports.handler = async (event) => {
     }
 
     let result = null;
-    result = await insertDdbItem(`${config.project_name}-${config.stage}-Coffees`, data);
 
-    return handleSuccess({ result });
+    const employeeId = await getEmployeeIdByEmail(userDetails.username);
+    if (employeeId) {
+      result = await insertDdbItem(`${config.project_name}-${config.stage}-Coffees`, {
+        ...data,
+        transaction_by: employeeId,
+      });
+    }
+
+    if (result) return handleSuccess({ result });
+    return handleError("Something went wrong", 500);
   } catch (err) {
     return handleError(err.message);
   }
