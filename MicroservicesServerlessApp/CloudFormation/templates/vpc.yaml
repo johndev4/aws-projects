@@ -1,0 +1,178 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: VPC setup including endpoints for serverless application
+
+Parameters:
+  ProjectName:
+    Description: Name of the project
+    Type: String
+    Default: johncloud
+  Stage:
+    Description: An environment name that is prefixed to resource names
+    Type: String
+    AllowedValues:
+      - dev
+      - prod
+    Default: dev
+  VpcCIDR:
+    Description: IP range (CIDR notation) for this VPC
+    Type: String
+    Default: 10.192.0.0/16
+  PublicSubnetACIDR:
+    Description: IP range (CIDR notation) for the public subnet in the first
+      Availability Zone
+    Type: String
+    Default: 10.192.10.0/24
+  PublicSubnetBCIDR:
+    Description: IP range (CIDR notation) for the public subnet in the second
+      Availability Zone
+    Type: String
+    Default: 10.192.11.0/24
+  PrivateSubnetACIDR:
+    Description: IP range (CIDR notation) for the private subnet in the first
+      Availability Zone
+    Type: String
+    Default: 10.192.20.0/24
+  PrivateSubnetBCIDR:
+    Description: IP range (CIDR notation) for the private subnet in the second
+      Availability Zone
+    Type: String
+    Default: 10.192.21.0/24
+
+Resources:
+  VPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: !Ref VpcCIDR
+      EnableDnsSupport: true
+      EnableDnsHostnames: true
+      Tags:
+        - Key: Name
+          Value: !Sub ${ProjectName}-${Stage}-Vpc
+  # Internet Gateway
+  IGW:
+    Type: AWS::EC2::InternetGateway
+    Properties:
+      Tags:
+        - Key: Name
+          Value: !Sub ${ProjectName}-${Stage}-Igw
+  IGWAttachment:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      InternetGatewayId: !Ref IGW
+      VpcId: !Ref VPC
+  # Public & Private VPC Routes
+  PrivateRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: !Sub ${ProjectName}-${Stage}-PrivateRouteTable
+  PublicRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: !Sub ${ProjectName}-${Stage}-PublicRouteTable
+  PublicRoute:
+    Type: AWS::EC2::Route
+    Properties:
+      RouteTableId: !Ref PublicRouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref IGW
+  # Public & Private VPC Subnets
+  PublicSubnetA:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: !Ref PublicSubnetACIDR
+      AvailabilityZone: !Sub ${AWS::Region}a
+      MapPublicIpOnLaunch: true
+      Tags:
+        - Key: Name
+          Value: !Sub ${ProjectName}-${Stage}-PublicSubnetA
+  PublicSubnetARouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref PublicRouteTable
+      SubnetId: !Ref PublicSubnetA
+  PublicSubnetB:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: !Ref PublicSubnetBCIDR
+      AvailabilityZone: !Sub ${AWS::Region}b
+      MapPublicIpOnLaunch: true
+      Tags:
+        - Key: Name
+          Value: !Sub ${ProjectName}-${Stage}-PublicSubnetB
+  PublicSubnetBRouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref PublicRouteTable
+      SubnetId: !Ref PublicSubnetB
+  PrivateSubnetA:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: !Ref PrivateSubnetACIDR
+      AvailabilityZone: !Sub ${AWS::Region}a
+      Tags:
+        - Key: Name
+          Value: !Sub ${ProjectName}-${Stage}-PrivateSubnetA
+  PrivateSubnetARouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref PrivateRouteTable
+      SubnetId: !Ref PrivateSubnetA
+  PrivateSubnetB:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: !Ref PrivateSubnetBCIDR
+      AvailabilityZone: !Sub ${AWS::Region}b
+      Tags:
+        - Key: Name
+          Value: !Sub ${ProjectName}-${Stage}-PrivateSubnetB
+  PrivateSubnetBRouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref PrivateRouteTable
+      SubnetId: !Ref PrivateSubnetB
+
+  # VPC Endpoints
+  DynamoDBVPCEndpoint:
+    Type: AWS::EC2::VPCEndpoint
+    Properties:
+      ServiceName: !Sub com.amazonaws.${AWS::Region}.dynamodb
+      VpcId: !Ref VPC
+      VpcEndpointType: Gateway
+      RouteTableIds:
+        - !Ref PrivateRouteTable
+
+Outputs:
+  VPC:
+    Value: !Ref VPC
+    Export:
+      Name: !Sub ${ProjectName}-${Stage}-Vpc:Id
+  PublicSubnetA:
+    Value: !Ref PublicSubnetA
+    Export:
+      Name: !Sub ${ProjectName}-${Stage}-Vpc:PublicSubnetAId
+  PublicSubnetB:
+    Value: !Ref PublicSubnetB
+    Export:
+      Name: !Sub ${ProjectName}-${Stage}-Vpc:PublicSubnetBId
+  PrivateSubnetA:
+    Value: !Ref PrivateSubnetA
+    Export:
+      Name: !Sub ${ProjectName}-${Stage}-Vpc:PrivateSubnetAId
+  PrivateSubnetB:
+    Value: !Ref PrivateSubnetB
+    Export:
+      Name: !Sub ${ProjectName}-${Stage}-Vpc:PrivateSubnetBId
+  VpcCIDR:
+    Value: !Ref VpcCIDR
+    Export:
+      Name: !Sub ${ProjectName}-${Stage}-Vpc:CIDR
