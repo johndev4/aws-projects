@@ -1,0 +1,24 @@
+{
+  "name": "user",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "@aws-sdk/client-rds": "^3.699.0",
+    "@aws-sdk/rds-signer": "^3.699.0",
+    "@aws-sdk/lib-dynamodb": "^3.637.0",
+    "pg": "^8.13.1",
+    "uuid": "^10.0.0"
+  },
+  "devDependencies": {
+    "serverless-dotenv-plugin": "^6.0.0",
+    "serverless-offline": "^13.6.0",
+    "serverless-webpack": "^5.14.1",
+    "webpack-node-externals": "^3.0.0"
+  }
+}

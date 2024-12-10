@@ -1,0 +1,311 @@
+service: ${self:custom.projectName}-user
+frameworkVersion: "3"
+useDotEnv: true
+
+custom:
+  projectName: ${env:PROJECT_NAME, "mycloudorg"}
+  webpack:
+    webpackConfig: "./webpack.config.js"
+    packager: "npm"
+    includeModules: false # Use the node_modules from layer instead
+  serverless-offline:
+    httpPort: 5000
+    stage: dev
+    noAuth: true
+    useInProcess: true
+  dotenv:
+    path: ..\..\.env.${self:provider.stage, "dev"}
+    exclude:
+      - AWS_ACCESS_KEY_ID
+      - AWS_SECRET_ACCESS_KEY
+      - AWS_SESSION_TOKEN
+      - AWS_DEFAULT_REGION
+      - NODE_ENV
+      - PYTHONUNBUFFERED
+    required:
+      env:
+        - PROJECT_NAME
+        - STAGE
+        - POSTGRES_SECRET_NAME
+      file: true
+  # database:
+  #   dev:
+  #     PGPROXY_ENDPOINT:
+  #       "Fn::ImportValue": "${self:custom.projectName}-${self:provider.stage}-RDSProxy:Endpoint"
+  #     PGCREDS: ${ssm:/aws/reference/secretsmanager/${env:POSTGRES_SECRET_NAME}}
+  #     PGDATABASE:
+  #       "Fn::ImportValue": "${self:custom.projectName}-${self:provider.stage}-RDS:DBName"
+  #     PGPORT: 5432
+provider:
+  name: aws
+  runtime: nodejs20.x
+  stage: ${opt:stage, "dev"}
+  region: ${opt:region, "ap-southeast-1"}
+  apiGateway:
+    restApiId:
+      Ref: RestApi
+    restApiRootResourceId:
+      "Fn::GetAtt": [RestApi, RootResourceId]
+  environment:
+    PROJECT_NAME: ${self:custom.projectName}
+    STAGE: ${self:provider.stage}
+    REGION: ${self:provider.region}
+    # PGPROXY_ENDPOINT: ${self:custom.database.${self:provider.stage}.PGPROXY_ENDPOINT}
+    # PGUSER: ${self:custom.database.${self:provider.stage}.PGCREDS.username}
+    # PGDATABASE: ${self:custom.database.${self:provider.stage}.PGDATABASE}
+    # PGPASSWORD: ${self:custom.database.${self:provider.stage}.PGCREDS.password}
+    # PGPORT: ${self:custom.database.${self:provider.stage}.PGPORT}
+package:
+  individually: true
+  excludeDevDependencies: true
+  exclude:
+    - docker-compose.yml
+    - serverless.yml
+    - functions.yml
+    - package.json
+    - package-lock.json
+    - webpack.config.js
+    - node_modules/**
+plugins:
+  - serverless-webpack
+  - serverless-offline
+  - serverless-dotenv-plugin
+layers:
+  NodeModules:
+    name: ${self:service}-${self:provider.stage}-layer
+    path: layer
+    description: "Service function dependencies"
+    compatibleRuntimes:
+      - nodejs20.x
+    retain: false
+functions:
+  - ${file(functions.yml)}
+
+resources:
+  Parameters:
+    ProjectName:
+      Description: Name of the project
+      Type: String
+      Default: ${self:custom.projectName}
+    Stage:
+      Description: An environment name that is prefixed to resource names
+      Type: String
+      AllowedValues:
+        - dev
+        - prod
+      Default: ${self:provider.stage}
+  Resources:
+    # UserAttributesDynamoDBTable
+    UserAttributesDynamoDBTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: !Sub ${ProjectName}-${Stage}-UserAttributesDynamoDBTable
+        TableClass: STANDARD_INFREQUENT_ACCESS
+        AttributeDefinitions:
+          - AttributeName: id
+            AttributeType: S
+        BillingMode: PROVISIONED
+        ProvisionedThroughput:
+          ReadCapacityUnits: 5
+          WriteCapacityUnits: 5
+        TimeToLiveSpecification:
+          AttributeName: ttl
+          Enabled: true
+        KeySchema:
+          - AttributeName: id
+            KeyType: HASH
+        StreamSpecification:
+          StreamViewType: NEW_AND_OLD_IMAGES
+        Tags:
+          - Key: Environment
+            Value: ${self:provider.stage}
+          - Key: Project
+            Value: ${self:custom.projectName}
+    UserAttributesDynamoDBAccessPolicy:
+      Type: AWS::IAM::Policy
+      Properties:
+        PolicyName: !Sub ${ProjectName}-${Stage}-UserAttributesDynamoDBAccessPolicy
+        PolicyDocument:
+          Version: "2012-10-17"
+          Statement:
+            - Effect: Allow
+              Action:
+                - dynamodb:BatchGetItem
+                - dynamodb:BatchWriteItem
+                - dynamodb:PutItem
+                - dynamodb:DeleteItem
+                - dynamodb:GetItem
+                - dynamodb:UpdateItem
+                - dynamodb:Scan
+              Resource:
+                - !GetAtt UserAttributesDynamoDBTable.Arn
+                - !Join ["", [!GetAtt UserAttributesDynamoDBTable.Arn, "/index/*"]]
+              Condition:
+                StringEquals:
+                  "aws:RequestedRegion": ${self:provider.region}
+        Roles:
+          - !Ref MicroservicesLambdaFunctionRole
+      DependsOn: MicroservicesLambdaFunctionRole
+    # Cognito User Pool
+    CognitoUserPool:
+      Type: AWS::Cognito::UserPool
+      Properties:
+        UserPoolName: !Sub ${ProjectName}-${Stage}-CognitoUserPool
+        LambdaConfig:
+          PreSignUp: !GetAtt CreateUserInfoLambdaFunction.Arn
+        AutoVerifiedAttributes:
+          - email
+        UsernameAttributes:
+          - email
+        Policies:
+          PasswordPolicy:
+            MinimumLength: 8
+            RequireUppercase: true
+            RequireLowercase: true
+            RequireNumbers: true
+            RequireSymbols: true
+        MfaConfiguration: OPTIONAL
+        EnabledMfas:
+          - SOFTWARE_TOKEN_MFA
+        AccountRecoverySetting:
+          RecoveryMechanisms:
+            - Name: verified_email
+              Priority: 1
+        EmailConfiguration:
+          EmailSendingAccount: COGNITO_DEFAULT
+        AdminCreateUserConfig:
+          AllowAdminCreateUserOnly: false
+    CognitoUserPoolClient:
+      Type: AWS::Cognito::UserPoolClient
+      Properties:
+        UserPoolId: !Ref CognitoUserPool
+        ClientName: !Sub ${ProjectName}-${Stage}-Client
+        GenerateSecret: true
+        RefreshTokenValidity: 30
+        CallbackURLs:
+          - http://localhost:4200/dashboard
+        SupportedIdentityProviders:
+          - COGNITO
+        AllowedOAuthFlowsUserPoolClient: true
+        AllowedOAuthFlows:
+          - code
+        AllowedOAuthScopes:
+          - email
+          - openid
+          - profile
+        ExplicitAuthFlows:
+          - ALLOW_REFRESH_TOKEN_AUTH
+          - ALLOW_USER_SRP_AUTH
+    CognitoUserPoolDomain:
+      Type: AWS::Cognito::UserPoolDomain
+      Properties:
+        Domain: !Sub ${ProjectName}app-${Stage}
+        UserPoolId: !Ref CognitoUserPool
+    # REST API gateway
+    RestApi:
+      Type: AWS::ApiGateway::RestApi
+      Properties:
+        Name: !Sub ${ProjectName}-${Stage}-RestApiGw
+        MinimumCompressionSize: 0
+        EndpointConfiguration:
+          Types:
+            - EDGE
+    RestApiCognitoAuthorizer:
+      Type: AWS::ApiGateway::Authorizer
+      Properties:
+        Name: CognitoAuthorizer
+        IdentitySource: method.request.header.Authorization
+        RestApiId: !Ref RestApi
+        Type: COGNITO_USER_POOLS
+        ProviderARNs:
+          - !GetAtt CognitoUserPool.Arn
+    # IAM Role for Microservices Lambda Function
+    MicroservicesLambdaFunctionRole:
+      Type: AWS::IAM::Role
+      Properties:
+        RoleName: !Sub ${ProjectName}-${Stage}-MicroservicesLambdaFunctionRole
+        AssumeRolePolicyDocument:
+          Version: "2012-10-17"
+          Statement:
+            - Effect: Allow
+              Principal:
+                Service: lambda.amazonaws.com
+              Action: sts:AssumeRole
+        ManagedPolicyArns:
+          - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+          - arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole
+          - arn:aws:iam::aws:policy/service-role/AWSLambdaDynamoDBExecutionRole
+    # Security Group for Microservices Lambda Function
+    WebSecurityGroup:
+      Type: AWS::EC2::SecurityGroup
+      Properties:
+        GroupDescription: Security Group for microservices lambda functions
+        GroupName: WebSecurityGroup
+        VpcId: !ImportValue
+          Fn::Sub: ${ProjectName}-${Stage}-Vpc:Id
+        SecurityGroupIngress:
+          - IpProtocol: tcp
+            FromPort: 80
+            ToPort: 80
+            CidrIp: 0.0.0.0/0
+          - IpProtocol: tcp
+            FromPort: 443
+            ToPort: 443
+            CidrIp: 0.0.0.0/0
+    # Lambda Permission to invoke Cognito User Pool
+    CognitoUserPoolInvokePermission:
+      Type: AWS::Lambda::Permission
+      Properties:
+        Action: lambda:InvokeFunction
+        FunctionName: !Sub ${ProjectName}-user-${Stage}-createUserInfo
+        Principal: cognito-idp.amazonaws.com
+        SourceArn: !GetAtt CognitoUserPool.Arn
+  Outputs:
+    #
+    CognitoUserPoolId:
+      Value: !Ref CognitoUserPool
+      Description: Cognito User Pool ID
+      Export:
+        Name: !Join
+          - ":"
+          - - !Sub ${ProjectName}-${Stage}-CognitoUserPool
+            - Id
+    CognitoUserPoolClientId:
+      Value: !Ref CognitoUserPoolClient
+      Description: Cognito User Pool Client ID
+      Export:
+        Name: !Join
+          - ":"
+          - - !Sub ${ProjectName}-${Stage}-CognitoUserPoolClient
+            - Id
+    CognitoUserPoolArn:
+      Value: !GetAtt CognitoUserPool.Arn
+      Description: Cognito User Pool ARN
+      Export:
+        Name: !Join
+          - ":"
+          - - !Sub ${ProjectName}-${Stage}-CognitoUserPool
+            - Arn
+    #
+    RestApi:
+      Value: !Ref RestApi
+      Export:
+        Name: !Sub ${ProjectName}-${Stage}-ApiGw:RestApiId
+    RestApiRootResourceId:
+      Value: !GetAtt RestApi.RootResourceId
+      Export:
+        Name: !Sub ${ProjectName}-${Stage}-ApiGw:RootResourceId
+    RestApiCognitoAuthorizerId:
+      Value: !Ref RestApiCognitoAuthorizer
+      Export:
+        Name: !Sub ${ProjectName}-${Stage}-ApiGw:CognitoAuthorizerId
+    #
+    MicroservicesLambdaFunctionRoleArn:
+      Value: !GetAtt MicroservicesLambdaFunctionRole.Arn
+      Export:
+        Name: !Sub ${ProjectName}-${Stage}-MicroservicesLambdaFunctionRole:Arn
+    #
+    WebSecurityGroup:
+      Value: !Ref WebSecurityGroup
+      Export:
+        Name: !Sub ${ProjectName}-${Stage}-Vpc:WebSecurityGroupId

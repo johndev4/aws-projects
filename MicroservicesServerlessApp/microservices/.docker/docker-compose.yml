@@ -1,0 +1,41 @@
+version: "3"
+
+services:
+  user:
+    image: johncloud/aws-node-serverless-builder:latest
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    container_name: user-dev
+    working_dir: /microservices
+    mem_limit: 4g
+    memswap_limit: 4g
+    mem_swappiness: 0
+    volumes:
+      - ../services/user:/microservices/services/user
+      - ../scripts:/microservices/scripts
+      - /microservices/services/user/node_modules
+      - /microservices/services/user/layer/nodejs/node_modules
+    env_file:
+      - ../.env.dev
+    command: python3 /microservices/scripts/deploy.py user
+    # command: sh -c "echo \"Remove User service\" && cd /microservices/services/user && serverless remove -s dev"
+  order:
+    image: johncloud/aws-node-serverless-builder:latest
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    container_name: order-dev
+    working_dir: /microservices
+    mem_limit: 4g
+    memswap_limit: 4g
+    mem_swappiness: 0
+    volumes:
+      - ../services/order:/microservices/services/order
+      - ../scripts:/microservices/scripts
+      - /microservices/services/order/node_modules
+      - /microservices/services/order/layer/nodejs/node_modules
+    env_file:
+      - ../.env.dev
+    command: python3 /microservices/scripts/deploy.py order
+    # command: sh -c "echo \"Remove Order service\" && cd /microservices/services/order && serverless remove -s dev"

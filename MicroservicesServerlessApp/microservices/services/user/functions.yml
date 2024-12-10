@@ -1,0 +1,50 @@
+createUserInfo:
+  role:
+    "Fn::GetAtt": [MicroservicesLambdaFunctionRole, Arn]
+  handler: functions/createUserInfo/index.handler
+  vpc:
+    securityGroupIds:
+      - "Fn::GetAtt": [WebSecurityGroup, Id]
+    subnetIds:
+      - "Fn::ImportValue": "${self:custom.projectName}-${self:provider.stage}-Vpc:PrivateSubnetAId"
+      - "Fn::ImportValue": "${self:custom.projectName}-${self:provider.stage}-Vpc:PrivateSubnetBId"
+  layers:
+    - { Ref: NodeModulesLambdaLayer }
+getUserAccess:
+  role:
+    "Fn::GetAtt": [MicroservicesLambdaFunctionRole, Arn]
+  handler: functions/getUserAccess/index.handler
+  layers:
+    - { Ref: NodeModulesLambdaLayer }
+  events:
+    - http:
+        path: /user/access/get
+        method: get
+        cors: true
+        authorizer:
+          type: COGNITO_USER_POOLS
+          scopes: email
+          authorizerId:
+            Ref: RestApiCognitoAuthorizer
+getUserInfo:
+  role:
+    "Fn::GetAtt": [MicroservicesLambdaFunctionRole, Arn]
+  handler: functions/getUserInfo/index.handler
+  vpc:
+    securityGroupIds:
+      - "Fn::GetAtt": [WebSecurityGroup, Id]
+    subnetIds:
+      - "Fn::ImportValue": "${self:custom.projectName}-${self:provider.stage}-Vpc:PrivateSubnetAId"
+      - "Fn::ImportValue": "${self:custom.projectName}-${self:provider.stage}-Vpc:PrivateSubnetBId"
+  layers:
+    - { Ref: NodeModulesLambdaLayer }
+  events:
+    - http:
+        path: /user/info/get
+        method: get
+        cors: true
+        authorizer:
+          type: COGNITO_USER_POOLS
+          scopes: email
+          authorizerId:
+            Ref: RestApiCognitoAuthorizer
