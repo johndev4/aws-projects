@@ -5,7 +5,7 @@ Parameters:
   ProjectName:
     Description: Name of the project
     Type: String
-    Default: johncloud
+    Default: johnproject001
   Stage:
     Description: An environment name that is prefixed to resource names
     Type: String
@@ -183,7 +183,7 @@ Resources:
   BastionHost:
     Type: AWS::EC2::Instance
     Properties:
-      InstanceType: t3.micro
+      InstanceType: t2.micro
       ImageId: ami-0f935a2ecd3a7bd5c
       SubnetId: !ImportValue
         Fn::Sub: ${ProjectName}-${Stage}-Vpc:PublicSubnetAId

@@ -2,7 +2,7 @@ version: "3"
 
 services:
   user:
-    image: johncloud/aws-node-serverless-builder:latest
+    image: johnproject001/aws-node-serverless-builder:latest
     build:
       context: .
       dockerfile: ./Dockerfile
@@ -21,7 +21,7 @@ services:
     command: python3 /microservices/scripts/deploy.py user
     # command: sh -c "echo \"Remove User service\" && cd /microservices/services/user && serverless remove -s dev"
   order:
-    image: johncloud/aws-node-serverless-builder:latest
+    image: johnproject001/aws-node-serverless-builder:latest
     build:
       context: .
       dockerfile: ./Dockerfile
