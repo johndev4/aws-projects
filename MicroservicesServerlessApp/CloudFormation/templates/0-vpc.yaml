@@ -60,7 +60,25 @@ Resources:
     Properties:
       InternetGatewayId: !Ref IGW
       VpcId: !Ref VPC
-  # Public & Private VPC Routes
+  # # Elastic IP for NAT Gateway
+  # NatGatewayEIP:
+  #   Type: AWS::EC2::EIP
+  #   Properties:
+  #     Domain: vpc
+  #     Tags:
+  #       - Key: Name
+  #         Value: !Sub ${ProjectName}-${Stage}-NatGatewayEIP
+  # # NAT Gateway
+  # NatGateway:
+  #   Type: AWS::EC2::NatGateway
+  #   DependsOn: IGWAttachment # VPC NAT Gateway cannot be created without IGW attached to VPC
+  #   Properties:
+  #     AllocationId: !GetAtt NatGatewayEIP.AllocationId
+  #     SubnetId: !Ref PublicSubnetA
+  #     Tags:
+  #       - Key: Name
+  #         Value: !Sub ${ProjectName}-${Stage}-NatGateway
+  # Public & Private VPC Route Tables
   PrivateRouteTable:
     Type: AWS::EC2::RouteTable
     Properties:
@@ -75,12 +93,20 @@ Resources:
       Tags:
         - Key: Name
           Value: !Sub ${ProjectName}-${Stage}-PublicRouteTable
+  # Public Route for Internet Access via Internet Gateway
   PublicRoute:
     Type: AWS::EC2::Route
     Properties:
       RouteTableId: !Ref PublicRouteTable
       DestinationCidrBlock: 0.0.0.0/0
       GatewayId: !Ref IGW
+  # # Private Route for Internet Access via NAT Gateway
+  # PrivateRouteToInternet:
+  #   Type: AWS::EC2::Route
+  #   Properties:
+  #     RouteTableId: !Ref PrivateRouteTable
+  #     DestinationCidrBlock: 0.0.0.0/0
+  #     NatGatewayId: !Ref NatGateway
   # Public & Private VPC Subnets
   PublicSubnetA:
     Type: AWS::EC2::Subnet
@@ -140,8 +166,7 @@ Resources:
     Properties:
       RouteTableId: !Ref PrivateRouteTable
       SubnetId: !Ref PrivateSubnetB
-
-  # VPC Endpoints
+  # VPC Endpoint for DynamoDB
   DynamoDBVPCEndpoint:
     Type: AWS::EC2::VPCEndpoint
     Properties:
@@ -150,6 +175,54 @@ Resources:
       VpcEndpointType: Gateway
       RouteTableIds:
         - !Ref PrivateRouteTable
+  # Systems Manager endpoints SG
+  SystemsManagerEndpointSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Security group for Systems Manager VPC Endpoint
+      VpcId: !Ref VPC
+      SecurityGroupIngress:
+        - IpProtocol: -1
+          FromPort: -1
+          ToPort: -1
+          CidrIp: !Ref VpcCIDR
+      Tags:
+        - Key: Name
+          Value: !Sub ${ProjectName}-${Stage}-SSMEndpointSG
+  # Systems Manager endpoints (you need all three for full functionality)
+  SystemsManagerEndpoint:
+    Type: AWS::EC2::VPCEndpoint
+    Properties:
+      ServiceName: !Sub com.amazonaws.${AWS::Region}.ssm
+      VpcId: !Ref VPC
+      VpcEndpointType: Interface
+      SubnetIds:
+        - !Ref PrivateSubnetA
+      SecurityGroupIds:
+        - !Ref SystemsManagerEndpointSecurityGroup
+      PrivateDnsEnabled: true
+  EC2MessagesEndpoint:
+    Type: AWS::EC2::VPCEndpoint
+    Properties:
+      ServiceName: !Sub com.amazonaws.${AWS::Region}.ec2messages
+      VpcId: !Ref VPC
+      VpcEndpointType: Interface
+      SubnetIds:
+        - !Ref PrivateSubnetA
+      SecurityGroupIds:
+        - !Ref SystemsManagerEndpointSecurityGroup
+      PrivateDnsEnabled: true
+  SSMMessagesEndpoint:
+    Type: AWS::EC2::VPCEndpoint
+    Properties:
+      ServiceName: !Sub com.amazonaws.${AWS::Region}.ssmmessages
+      VpcId: !Ref VPC
+      VpcEndpointType: Interface
+      SubnetIds:
+        - !Ref PrivateSubnetA
+      SecurityGroupIds:
+        - !Ref SystemsManagerEndpointSecurityGroup
+      PrivateDnsEnabled: true
 
 Outputs:
   VPC:
@@ -176,3 +249,7 @@ Outputs:
     Value: !Ref VpcCIDR
     Export:
       Name: !Sub ${ProjectName}-${Stage}-Vpc:CIDR
+  # PrivateSubnetACIDR:
+  #   Value: !Ref PrivateSubnetACIDR
+  #   Export:
+  #     Name: !Sub ${ProjectName}-${Stage}-Vpc:PrivateSubnetACIDRCIDR

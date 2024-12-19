@@ -1,0 +1,217 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: RDS PostgreSQL with RDS Proxy Setup (Free Tier)
+
+Parameters:
+  ProjectName:
+    Description: Name of the project
+    Type: String
+    Default: johnproject001
+  Stage:
+    Description: An environment name that is prefixed to resource names
+    Type: String
+    AllowedValues:
+      - dev
+      - prod
+    Default: dev
+  DBName:
+    Type: String
+    Default: mydb
+  DBUsername:
+    Type: String
+    Default: postgres
+
+Resources:
+  # DB Security Groups
+  DBProxySecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Security group for RDS Proxy
+      VpcId: !ImportValue
+        Fn::Sub: ${ProjectName}-${Stage}-Vpc:Id
+      # SecurityGroupIngress:
+      #   - IpProtocol: tcp # NOTE: This inbound rule depends on microservice user's resource (MicroservicesLambdaFunctionRole)
+      #     FromPort: 5432
+      #     ToPort: 5432
+      #     SourceSecurityGroupId: !ImportValue
+      #       Fn::Sub: ${ProjectName}-${Stage}-Vpc:WebSecurityGroupId
+      Tags:
+        - Key: Name
+          Value: !Sub ${ProjectName}-${Stage}-rds-proxy-sg
+  PostgresDBSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Security group for RDS PostgreSQL instance
+      VpcId: !ImportValue
+        Fn::Sub: ${ProjectName}-${Stage}-Vpc:Id
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 5432
+          ToPort: 5432
+          SourceSecurityGroupId: !Ref DBProxySecurityGroup
+        - IpProtocol: tcp # NOTE: This inbound rule depends on Bastion Host instance's security group creation
+          FromPort: 5432
+          ToPort: 5432
+          SourceSecurityGroupId: !ImportValue
+            Fn::Sub: ${ProjectName}-${Stage}-BastionSecurityGroup:Id
+      Tags:
+        - Key: Name
+          Value: !Sub ${ProjectName}-${Stage}-rds-sg
+  # IAM Role for RDS Proxy
+  DBProxyRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: rds.amazonaws.com
+            Action: sts:AssumeRole
+  ProxyPolicy:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyName: RDSProxyPolicy
+      Roles:
+        - !Ref DBProxyRole
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Action:
+              - secretsmanager:GetSecretValue
+              - secretsmanager:DescribeSecret
+            Resource: !GetAtt PostgresDB.MasterUserSecret.SecretArn
+          - Effect: Allow
+            Action:
+              - kms:Decrypt
+            Resource: "*"
+            Condition:
+              StringEquals:
+                kms:ViaService: !Sub secretsmanager.${AWS::Region}.amazonaws.com
+  # RDS Postgres Instance with IAM authentication
+  PostgresDB:
+    Type: AWS::RDS::DBInstance
+    Properties:
+      DBInstanceIdentifier: !Sub ${Stage}-${ProjectName}-instance-1
+      DBName: !Ref DBName
+      Engine: postgres
+      EngineVersion: "16.1"
+      MasterUsername: !Ref DBUsername
+      ManageMasterUserPassword: true
+      DBInstanceClass: db.t3.micro
+      DBParameterGroupName: !Ref PostgresDBParameterGroup
+      AllocatedStorage: 20
+      MaxAllocatedStorage: 20
+      VPCSecurityGroups:
+        - !Ref PostgresDBSecurityGroup
+      DBSubnetGroupName: !Ref PostgresDBSubnetGroup
+      AvailabilityZone: ap-southeast-1a
+      PubliclyAccessible: false
+      MonitoringInterval: 0
+      EnablePerformanceInsights: false
+      BackupRetentionPeriod: 1
+      MultiAZ: false
+      DeletionProtection: false
+      StorageType: gp2
+      EnableIAMDatabaseAuthentication: true
+  PostgresDBSubnetGroup:
+    Type: AWS::RDS::DBSubnetGroup
+    Properties:
+      DBSubnetGroupDescription: Subnet group for RDS
+      SubnetIds:
+        - !ImportValue
+          Fn::Sub: ${ProjectName}-${Stage}-Vpc:PrivateSubnetAId
+        - !ImportValue
+          Fn::Sub: ${ProjectName}-${Stage}-Vpc:PrivateSubnetBId
+  PostgresDBParameterGroup:
+    Type: AWS::RDS::DBParameterGroup
+    Properties:
+      Description: Custom parameter group for PostgreSQL 16.1
+      Family: postgres16
+      Parameters:
+        rds.force_ssl: "0"
+      Tags:
+        - Key: Environment
+          Value: !Ref Stage
+  # RDS Proxy with IAM authentication
+  DBProxy:
+    Type: AWS::RDS::DBProxy
+    Properties:
+      DBProxyName: !Sub ${Stage}-${ProjectName}-instance-proxy-1
+      EngineFamily: POSTGRESQL
+      RoleArn: !GetAtt DBProxyRole.Arn
+      Auth:
+        - AuthScheme: SECRETS
+          SecretArn: !GetAtt PostgresDB.MasterUserSecret.SecretArn
+          IAMAuth: REQUIRED # Enable IAM authentication
+      VpcSubnetIds:
+        - !ImportValue
+          Fn::Sub: ${ProjectName}-${Stage}-Vpc:PrivateSubnetAId
+        - !ImportValue
+          Fn::Sub: ${ProjectName}-${Stage}-Vpc:PrivateSubnetBId
+      VpcSecurityGroupIds:
+        - !Ref DBProxySecurityGroup
+      RequireTLS: true # Required for IAM authentication
+      IdleClientTimeout: 1800
+  ProxyTargetGroup:
+    Type: AWS::RDS::DBProxyTargetGroup
+    Properties:
+      DBProxyName: !Ref DBProxy
+      TargetGroupName: default
+      DBInstanceIdentifiers:
+        - !Ref PostgresDB
+  # IAM Policy for applications to generate IAM authentiion token and connect to RDS Proxy
+  # ApplicationRDSProxyPolicy: # NOTE: This resource depends on microservice user's resource (MicroservicesLambdaFunctionRole)
+  #   Type: AWS::IAM::Policy
+  #   Properties:
+  #     PolicyName: !Sub ${ProjectName}-${Stage}-LambdaRDSProxyPolicy
+  #     PolicyDocument:
+  #       Version: "2012-10-17"
+  #       Statement:
+  #         - Sid: Statement1
+  #           Effect: Allow
+  #           Action: rds-db:connect
+  #           Resource: !Join
+  #             - /
+  #             - - !Join
+  #                 - ":"
+  #                 - - !Sub arn:aws:rds-db:${AWS::Region}:${AWS::AccountId}:dbuser
+  #                   - !Select
+  #                     - "6"
+  #                     - !Split
+  #                       - ":"
+  #                       - !GetAtt DBProxy.DBProxyArn
+  #               - "*"
+  #     Roles:
+  #       - !Sub ${ProjectName}-${Stage}-MicroservicesLambdaFunctionRole
+
+Outputs:
+  RDSEndpoint:
+    Description: RDS Instance Endpoint
+    Value: !GetAtt PostgresDB.Endpoint.Address
+    Export:
+      Name: !Sub ${ProjectName}-${Stage}-RDS:Endpoint
+  RDSProxyEndpoint:
+    Description: RDS Proxy Endpoint
+    Value: !GetAtt DBProxy.Endpoint
+    Export:
+      Name: !Sub ${ProjectName}-${Stage}-RDSProxy:Endpoint
+  DBName:
+    Description: Database Name
+    Value: !Ref DBName
+    Export:
+      Name: !Sub ${ProjectName}-${Stage}-RDS:DBName
+  RDSSecretArn:
+    Description: ARN of the PostgreSQL secret
+    Value: !GetAtt PostgresDB.MasterUserSecret.SecretArn
+    Export:
+      Name: !Sub ${ProjectName}-${Stage}-RDS:SecretArn
+  RDSSecretName:
+    Description: Name of the PostgreSQL secret
+    Value: !Select
+      - 6
+      - !Split
+        - ":"
+        - !GetAtt PostgresDB.MasterUserSecret.SecretArn
+    Export:
+      Name: !Sub ${ProjectName}-${Stage}-RDS:SecretName
