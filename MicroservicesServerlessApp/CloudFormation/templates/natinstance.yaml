@@ -1,0 +1,70 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Create a NAT instance for private subnets to have internet access.
+  This is optional if you want to manage your own NAT gateway or if you don't
+  want to use the AWS-managed NAT Gateway.
+
+Parameters:
+  ProjectName:
+    Description: Name of the project
+    Type: String
+    Default: johnproject001
+  Stage:
+    Description: An environment name that is prefixed to resource names
+    Type: String
+    AllowedValues:
+      - dev
+      - prod
+    Default: dev
+  KeyPairName:
+    Type: AWS::EC2::KeyPair::KeyName
+    Description: Name of an existing EC2 KeyPair for SSH access to the bastion host
+
+Resources:
+  NATSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Security group for NAT Instance
+      VpcId: !ImportValue
+        Fn::Sub: ${ProjectName}-${Stage}-Vpc:Id
+      SecurityGroupIngress:
+        - IpProtocol: -1
+          FromPort: -1
+          ToPort: -1
+          CidrIp: !ImportValue
+            Fn::Sub: ${ProjectName}-${Stage}-Vpc:PrivateSubnetACIDR
+      SecurityGroupEgress:
+        - IpProtocol: -1
+          FromPort: -1
+          ToPort: -1
+          CidrIp: 0.0.0.0/0
+      Tags:
+        - Key: Name
+          Value: !Sub ${ProjectName}-${Stage}-NAT-sg
+  NATInstance:
+    Type: AWS::EC2::Instance
+    Properties:
+      InstanceType: t2.micro
+      ImageId: ami-00004f35d3112b57b
+      SubnetId: !ImportValue
+        Fn::Sub: ${ProjectName}-${Stage}-Vpc:PublicSubnetAId
+      SecurityGroupIds:
+        - !Ref NATSecurityGroup
+      KeyName: !Ref KeyPairName
+      SourceDestCheck: false # This will stop to allow your instance to send and receive traffic when the source or destination is not itself.
+      BlockDeviceMappings:
+        - DeviceName: /dev/xvda
+          Ebs:
+            VolumeSize: 8
+            VolumeType: gp3
+            DeleteOnTermination: true
+            Encrypted: true
+      Tags:
+        - Key: Name
+          Value: !Sub ${ProjectName}-${Stage}-NAT-Instance
+
+Outputs:
+  NATInstanceId:
+    Description: NAT Instance ID
+    Value: !Ref NATInstance
+    Export:
+      Name: !Sub ${ProjectName}-${Stage}-NATInstance:Id
