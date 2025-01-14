@@ -20,17 +20,40 @@ This architecture leverages AWS services to create a scalable, efficient, and se
 
 6. **RDS Proxy**: Enhances database connection efficiency by pooling and managing connections to the Postgres RDS. It helps improve scalability and availability of the database.
 
-7. **Postgres RDS**: A managed relational database service that stores user information. It provides features like automated backups, patching, and replication for high availability.
+7. **RDS (Relational Database Service)**: A managed relational database service that stores user information. It provides features like automated backups, patching, and replication for high availability.
 
-8. **UserAttributes DynamoDB Table**: A NoSQL database that stores user attributes and access information. It offers high performance and scalability for handling large volumes of data.
+8. **DynamoDB**: A NoSQL database that stores user attributes and access information. It offers high performance and scalability for handling large volumes of data.
 
 9. **VPC Endpoint**: Facilitates secure communication between the VPC and other AWS services without traversing the public internet, enhancing security.
 
-### Bastion Host
+### Bastion Host for Postgres Database
 
 ![image](./assets/BastionHostSetup.drawio.png)
 
-To access a Postgres DB located in a private subnet (which lacks internet access), a Bastion Host is required. The Bastion Host will be placed in a public subnet, allowing internet connectivity via the Internet Gateway (IGW). It will have a Security Group with an inbound rule that permits only authorized IP addresses, providing instance-level security since it's exposed to the internet. The Postgres DB instance will also be secured by a Security Group with an inbound rule that allows connections from the Bastion Host, ensuring controlled and secure access to the database.
+To access a database located in a private subnet (which lacks internet access), a Bastion Host is required. The Bastion Host will be placed in a public subnet, allowing internet connectivity via the Internet Gateway (IGW). It will have a Security Group with an inbound rule that permits only authorized IP addresses, providing instance-level security since it's exposed to the internet. The database instance will also be secured by a Security Group with an inbound rule that allows connections from the Bastion Host, ensuring controlled and secure access to the database.
+
+![image](./assets/BastionHostSSMSetup.drawio.png)
+
+The first bastion host setup is only acceptable for a non-production environment. With that setup, the database is not directly accessible through the internet since it is in a private subnet. However, it is still indirectly accessible via the internet through the bastion host. Anyone with the KeyPair and bastion host endpoint can access it via SSH. It will only be secure at the instance level if you configure the security group to allow inbound access from specific public IP addresses. This setup might be exploited by hackers.
+
+To enhance the security of your database in a production environment, we will configure the bastion host differently. In this setup, the bastion host will be placed in the same private subnet as the database. We will use AWS Systems Manager (SSM) to access it via Session Manager in the AWS Management Console or AWS CLI. This approach leverages IAM roles and user policies, ensuring that only authorized users within your AWS account can access the database. By using VPC endpoints (SSM, EC2 messages, SSM messages), the data will not need to travel across the internet. Hence, it will only travel within the AWS backbone network to reach the AWS Systems Manager (SSM). The data will be encrypted before being sent to your local network through the internet. Although you can use the NAT Gateway, it still utilizes the internet, which we want to avoid. Moreover, data transfer through the internet is more expensive than data transfer within the AWS cloud.
+
+| **Feature**                | **SSH (Secure Shell)**                                             | **AWS SSM Session Manager**                                     |
+| -------------------------- | ------------------------------------------------------------------ | --------------------------------------------------------------- |
+| **Widely Used and Tested** | Mature protocol with extensive documentation and community support | Requires AWS ecosystem, newer compared to SSH                   |
+| **Direct Control**         | Provides straightforward, direct connection to your server         | Indirect via AWS Systems Manager                                |
+| **Port Exposure**          | Requires opening port 22, potential security risk                  | No need to expose inbound ports, reducing external attack risks |
+| **Key Management**         | Managing SSH keys can be cumbersome                                | No SSH keys needed, simplifies management                       |
+| **Offline Access**         | Can be used without relying on a specific cloud provider           | Requires network access to AWS                                  |
+| **Logging and Monitoring** | More complex to set up                                             | Integrated with AWS CloudTrail and CloudWatch for detailed logs |
+| **Integrated with IAM**    | No                                                                 | Uses AWS IAM, simplifies permission management                  |
+| **Cross-Platform**         | Primarily Linux, with some Windows support                         | Works with both Linux and Windows instances                     |
+
+**_References:_**
+
+- https://docs.aws.amazon.com/systems-manager/latest/userguide/session-manager-prerequisites.html
+- https://dev.classmethod.jp/articles/ssh-vs-session-manager-ec2-connection/?form=MG0AV3
+- https://dev.to/afiqiqmal/aws-session-manager-vs-ssh-n3f?form=MG0AV3
 
 ## AWS Well-Architected Framework
 
@@ -64,6 +87,10 @@ To access a Postgres DB located in a private subnet (which lacks internet access
 
 This architecture demonstrates a well-balanced implementation aligned with the AWS Well-Architected Framework. It leverages AWS services to build a secure, reliable, efficient, and cost-effective solution for managing user data and access. The use of serverless computing, managed services, and robust security measures ensures that the system can scale and perform efficiently while maintaining high availability and security.
 
+**_References:_**
+
+- https://aws.amazon.com/blogs/apn/the-6-pillars-of-the-aws-well-architected-framework/
+
 ## Infrastructure
 
 ### Build the Cloud Architecture by Creating the CloudFormation Stacks
@@ -81,7 +108,7 @@ $ cd CloudFormation
 2. Then execute the cloudformation command to create stack
 
 ```bash
-$ aws cloudformation create-stack --stack-name [PROJECT_NAME]-[Stage]-[TEMPLATE_NAME] --template-body file://templates/[TEMPLATE_NAME].yaml --parameters ParameterKey=ProjectName,ParameterValue=[PROJECT_NAME] ParameterKey=Stage,ParameterValue=[Stage] --profile [aws_profile]
+$ aws cloudformation create-stack --stack-name {PROJECT_NAME}-{Stage}-{TEMPLATE_NAME} --template-body file://templates/{TEMPLATE_NAME}.yaml --parameters ParameterKey=ProjectName,ParameterValue={PROJECT_NAME} ParameterKey=Stage,ParameterValue={Stage} --profile [aws_profile]
 ```
 
 **_Note: Add `--capabilities CAPABILITY_NAMED_IAM` flag for `serverlessapp.yaml` template._**
@@ -102,18 +129,56 @@ $ cd Database
 2. Create migration script by executing this command:
 
 ```bash
-$ npx db-migrate create [migration_name] --config .\config\database.json -e [database_environment]
+$ npx db-migrate create {migration_name} --config .\config\database.json -e {database_environment}
 ```
 
 3. Run the migration script:
 
 ```bash
-$ npx db-migrate up [migration_script_filename] --config .\config\database.json -e [database_environment]
+$ npx db-migrate up {migration_script_filename} --config .\config\database.json -e {database_environment}
 ```
 
 ```bash
-$ npx db-migrate down [migration_script_filename] --config .\config\database.json -e [database_environment]
+$ npx db-migrate down {migration_script_filename} --config .\config\database.json -e {database_environment}
 ```
+
+### Connecting to a Bastion Host Using AWS CLI and AWS SSM
+
+**Prerequisites**
+
+- AWS CLI
+- [Session Manager Plugin](https://docs.aws.amazon.com/systems-manager/latest/userguide/install-plugin-windows.html)
+
+Start SSM session by executing this command:
+
+```bash
+$ aws ssm start-session --target {ec2_instance_id} \--profile {aws_profile}
+```
+
+To transfer data from your local machine to the bastion host, you need to forward port 22 (SSH) first, then use `scp`. Make sure that port 9999 is available on your local machine, or else you can use a different port. Your bastion host instance must have a KeyPair to access it with SSH.
+
+```bash
+$ aws ssm start-session --target {ec2_instance_id} \
+--document-name AWS-StartPortForwardingSession \
+--parameters 'portNumber=\"22\",localPortNumber=\"9999\"' \
+--profile {aws_profile}
+```
+
+```bash
+$ scp -r -i {key_pair} -P 9999 {your_local_path} "ec2-user@localhost:~"
+```
+
+To access your database using your Databas Manager in your local machine, port forward the RDS instance to your local machine through the bastion host by executing this command:
+
+```bash
+$ aws ssm start-session --target {ec2_instance_id} \
+--document-name AWS-StartPortForwardingSessionToRemoteHost \
+--parameters 'host=\"{rds_instance_endpoint}\",portNumber=\"5432\",localPortNumber=\"5432\"' --profile {aws_profile}
+```
+
+**_References:_**
+
+- https://aws.amazon.com/blogs/database/securely-connect-to-an-amazon-rds-or-amazon-ec2-database-instance-remotely-with-your-preferred-gui/
 
 ### Microservices
 
@@ -150,7 +215,7 @@ $ cd .\microservices\.docker
 2. Run the docker compose command and specify the name of the service to deploy
 
 ```bash
-$ docker compose up [service_name]
+$ docker compose up {service_name}
 ```
 
 **_Note: Make sure you are using `command: sh -c "echo \"Build and deploy Coffee service\" && cd /myservice/layer/nodejs && npm i && cd /myservice && npm i && npx sls deploy -s dev"` inside the `docker-compose.yml` file._**
@@ -160,7 +225,7 @@ $ docker compose up [service_name]
 When you want to add dependencies for a specified service, you must install those dependencies in the `package.json` file located in both the root directory and the `layer/nodejs` directory of the service. The `package.json` file in layer/nodejs is for common dependencies for all the service’s AWS Lambdas in the cloud, while the `package.json` file in the root directory of the service is for offline use.
 
 ```bash
-$ npm install [dependency_name]
+$ npm install {dependency_name}
 ```
 
 In the future, if you have too many services, you may also add common dependencies for all microservices and automate the installation of these common dependencies. This approach makes it easier and faster for developers to install dependencies and prevents problematic missing dependencies after deployment.

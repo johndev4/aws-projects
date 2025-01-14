@@ -1,0 +1,145 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: Bastion host for accessing SSM through Session Manager
+
+Parameters:
+  ProjectName:
+    Description: Name of the project
+    Type: String
+    Default: johnproject001
+  Stage:
+    Description: An environment name that is prefixed to resource names
+    Type: String
+    AllowedValues:
+      - dev
+      - prod
+    Default: dev
+  MyIpAddress:
+    Type: String
+    Description: My current IP address
+    Default: 0.0.0.0/0
+  KeyPairName:
+    Type: AWS::EC2::KeyPair::KeyName
+    Description: Name of an existing EC2 KeyPair for SSH access to the bastion host
+
+Conditions:
+  IsProd: !Equals
+    - !Ref Stage
+    - prod
+  IsNotProd: !Not [!Equals [!Ref Stage, "prod"]]
+
+Resources:
+  BastionSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Security group for Bastion Host
+      VpcId: !ImportValue
+        Fn::Sub: ${ProjectName}-${Stage}-Vpc:Id
+      SecurityGroupIngress: !If
+        - IsProd
+        - []
+        - - IpProtocol: tcp
+            FromPort: 22
+            ToPort: 22
+            CidrIp: !Sub ${MyIpAddress}
+      SecurityGroupEgress: !If
+        - IsProd
+        - - IpProtocol: -1
+            FromPort: -1
+            ToPort: -1
+            CidrIp: !ImportValue
+              Fn::Sub: ${ProjectName}-${Stage}-Vpc:CIDR
+          # - IpProtocol: tcp
+          #   FromPort: 5432
+          #   ToPort: 5432
+          #   CidrIp: !ImportValue
+          #     Fn::Sub: ${ProjectName}-${Stage}-Vpc:CIDR
+        - - IpProtocol: -1
+            FromPort: -1
+            ToPort: -1
+            CidrIp: 0.0.0.0/0
+      Tags:
+        - Key: Name
+          Value: !Sub ${ProjectName}-${Stage}-bastion-sg
+  BastionInstanceRole:
+    Type: AWS::IAM::Role
+    Condition: IsProd
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: ec2.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore
+      Tags:
+        - Key: Name
+          Value: !Sub ${ProjectName}-${Stage}-bastion-role
+  BastionInstanceProfile:
+    Type: AWS::IAM::InstanceProfile
+    Condition: IsProd
+    Properties:
+      Roles:
+        - !Ref BastionInstanceRole
+  BastionHost:
+    Type: AWS::EC2::Instance
+    Properties:
+      InstanceType: t2.micro
+      ImageId: ami-0f935a2ecd3a7bd5c
+      IamInstanceProfile: !If
+        - IsProd
+        - !Ref BastionInstanceProfile
+        - !Ref AWS::NoValue
+      SubnetId: !If
+        - IsProd
+        - !ImportValue
+          Fn::Sub: ${ProjectName}-${Stage}-Vpc:PrivateSubnetAId
+        - !ImportValue
+          Fn::Sub: ${ProjectName}-${Stage}-Vpc:PublicSubnetAId
+      SecurityGroupIds:
+        - !Ref BastionSecurityGroup
+      KeyName: !Ref KeyPairName
+      BlockDeviceMappings:
+        - DeviceName: /dev/xvda
+          Ebs:
+            VolumeSize: 8
+            VolumeType: gp3
+            DeleteOnTermination: true
+            Encrypted: true
+      UserData: !Base64
+        Fn::Sub:
+          - |
+            #!/bin/bash
+            sudo yum update -y
+            sudo yum install -y postgresql16
+            curl -fsSL https://rpm.nodesource.com/setup_20.x | sudo bash -
+            sudo yum install -y nodejs
+            ${SSMInstall}
+          - SSMInstall: !If
+              - IsProd
+              - |
+                # Install SSM Agent
+                sudo yum install -y amazon-ssm-agent
+                sudo systemctl enable amazon-ssm-agent
+                sudo systemctl start amazon-ssm-agent
+              - ""
+      Tags:
+        - Key: Name
+          Value: !Sub ${ProjectName}-${Stage}-bastion-host
+  BastionHostEIP:
+    Type: AWS::EC2::EIP
+    Condition: IsNotProd
+    Properties:
+      Domain: vpc
+      InstanceId: !Ref BastionHost
+      Tags:
+        - Key: Name
+          Value: !Sub ${ProjectName}-${Stage}-BastionHostEIP
+
+Outputs:
+  BastionSecurityGroupId:
+    Description: Bastion Host Instance Security Group ID
+    Value: !Ref BastionSecurityGroup
+    Export:
+      Name: !Sub ${ProjectName}-${Stage}-BastionSecurityGroup:Id
