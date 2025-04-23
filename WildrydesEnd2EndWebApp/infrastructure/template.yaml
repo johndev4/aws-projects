@@ -31,7 +31,7 @@ Resources:
       DefinitionBody: !Transform
         Name: AWS::Include
         Parameters:
-          Location: backend/api.yaml
+          Location: ../backend/api.yaml
       EndpointConfiguration: EDGE
       TracingEnabled: false
       Auth:
@@ -49,7 +49,7 @@ Resources:
       Description: !Sub
         - Stack ${AWS::StackName} Function ${ResourceName}
         - ResourceName: RequestUnicornFunction
-      CodeUri: backend/functions/RequestUnicorn
+      CodeUri: ../backend/functions/RequestUnicorn
       Handler: index.handler
       Runtime: nodejs20.x
       MemorySize: 3008
@@ -94,7 +94,7 @@ Resources:
       Description: !Sub
         - Stack ${AWS::StackName} Layer ${ResourceName}
         - ResourceName: FunctionsLayer
-      ContentUri: backend/layers/nodejs
+      ContentUri: ../backend/layers/nodejs
       RetentionPolicy: Delete
     Metadata:
       BuildMethod: nodejs20.x
@@ -171,23 +171,18 @@ Outputs:
     Value: !GetAtt Distribution.DomainName
 Metadata:
   AWS::Composer::Groups:
-    Group:
-      Label: User Authentication
-      Members:
-        - UserPoolClient
-        - UserPool
-    Group2:
-      Label: Compute
-      Members:
-        - FunctionsLayer
-        - RequestUnicornFunction
-    Group3:
-      Label: Databases
-      Members:
-        - Rides
     Group4:
-      Label: Client
+      Label: Deliver static contents
       Members:
         - Distribution
         - WildrydesAppBucket
         - CloudFrontOriginAccessControl
+    Group:
+      Label: Backend of the wildrydes application
+      Members:
+        - RestApi
+        - FunctionsLayer
+        - UserPoolClient
+        - UserPool
+        - RequestUnicornFunction
+        - Rides
