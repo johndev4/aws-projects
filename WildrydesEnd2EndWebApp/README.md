@@ -6,7 +6,7 @@ This serverless web application allows users to request rides on unicorns from t
 
 The application’s architecture leverages various AWS resources, including AWS Lambda, Amazon API Gateway, Amazon CloudFront, Amazon S3, Amazon DynamoDB, and Amazon Cognito. Amazon CloudFront delivers static web content stored in Amazon S3 bucket and caches it at AWS edge locations to ensure low-latency distribution to end users. Amazon Cognito handles authentication and user management, securing the API. Amazon API Gateway exposes the Lambda function as a RESTful API. AWS Lambda functions process API calls sent from the web client. For data storage, the application uses Amazon DynamoDB, a NoSQL database, to store unicorn ride request data sent from the client.
 
-![image](./assets/wildrydes-diagram.png)
+![image](./infrastructure/wildrydes-diagram.png)
 
 ## Deploy the application using SAM
 
