@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ListAllMyBucketsResult xmlns="http://s3.amazonaws.com/doc/2006-03-01/">
+  <Owner>
+    <ID>fcaf7eeff8899f7f89ef5ba4265e98905c9956a4aaecfaaceb21bc21e71f5264</ID>
+    <DisplayName>raphmistica04</DisplayName>
+  </Owner>
+  <Buckets>
+    <Bucket>
+      <Name>saacourse-johndev4-demo-cloudfront</Name>
+      <CreationDate>2024-12-17T09:52:37.000Z</CreationDate>
+      <BucketRegion>ap-southeast-1</BucketRegion>
+    </Bucket>
+    <Bucket>
+      <Name>saacourse-johndev4-demo-encryption</Name>
+      <CreationDate>2024-11-20T22:24:00.000Z</CreationDate>
+      <BucketRegion>ap-southeast-1</BucketRegion>
+    </Bucket>
+    <Bucket>
+      <Name>saacourse-johndev4-demo-origin-website</Name>
+      <CreationDate>2024-11-20T22:24:00.000Z</CreationDate>
+      <BucketRegion>ap-southeast-1</BucketRegion>
+    </Bucket>
+    <Bucket>
+      <Name>saacourse-johndev4-demo-other-origin-website</Name>
+      <CreationDate>2024-11-20T22:24:00.000Z</CreationDate>
+      <BucketRegion>ap-southeast-1</BucketRegion>
+    </Bucket>
+    <Bucket>
+      <Name>saacourse-johndev4-demo-s3-access-logs</Name>
+      <CreationDate>2024-11-21T06:46:19.000Z</CreationDate>
+      <BucketRegion>ap-southeast-1</BucketRegion>
+    </Bucket>
+  </Buckets>
+</ListAllMyBucketsResult>

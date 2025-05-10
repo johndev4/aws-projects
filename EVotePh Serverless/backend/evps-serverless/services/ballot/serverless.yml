@@ -1,0 +1,113 @@
+service: evps-ballot
+frameworkVersion: "4"
+
+provider:
+  name: aws
+  runtime: nodejs20.x
+  stage: ${opt:stage, 'dev'}
+  region: ${opt:region, 'ap-southeast-1'}
+  # endpointType: REGIONAL
+  apiGateway:
+    restApiId:
+      "Fn::ImportValue": "evps-apigw-${self:provider.stage}-EvpsApiGw:Id"
+    restApiRootResourceId:
+      "Fn::ImportValue": "evps-apigw-${self:provider.stage}-EvpsApiGw:RootResourceId"
+  iam:
+    role:
+      managedPolicies:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaRole
+      statements:
+        - Effect: Allow
+          Action: "iot:*"
+          Resource: "*"
+
+custom:
+  serverless-offline:
+    httpPort: 5000
+    stage: dev
+    noAuth: true
+    useInProcess: true
+  dotenv:
+    # path: ../../env
+    exclude:
+      - SERVERLESS_ACCESS_KEY
+      - AWS_PROFILE
+    required:
+      env:
+        - KMS_KEY_ID
+      file: true
+  
+
+package:
+  individually: true
+  excludeDevDependencies: true
+  exclude:
+    - .serverless/**
+    - serverless.yml
+    - package.json
+    - package-lock.json
+
+plugins:
+  - serverless-dotenv-plugin
+  - serverless-offline
+
+functions:
+  getEncryptionPublicKey:
+    handler: src/getEncryptionPublicKey.handler
+    events:
+      - http:
+          path: /ballot/encryption/public-key
+          method: get
+          cors: true
+          authorizer:
+            name: userPoolAuthorizer
+            type: COGNITO_USER_POOLS
+            arn:
+              "Fn::ImportValue": "evps-auth-${self:provider.stage}-EvpsUserPool:Arn"
+    environment:
+      KMS_KEY_ID: ${env:KMS_KEY_ID}
+  castVote:
+    handler: src/castVote.handler
+    events:
+      - http:
+          path: /ballot/cast
+          method: post
+          cors: true
+          # authorizer:
+          #   name: userPoolAuthorizer
+          #   type: COGNITO_USER_POOLS
+          #   arn:
+          #     "Fn::ImportValue": "evps-auth-${self:provider.stage}-EvpsUserPool:Arn"
+          authorizer:
+            type: COGNITO_USER_POOLS
+            authorizerId:
+              "Fn::ImportValue": "evps-apigw-${self:provider.stage}-EvpsApiGw:SharedAuthorizerId"
+            # scopes: # for access token only
+            #   - email
+            #   - openid
+    environment:
+      BALLOTS_TABLE_NAME:
+        Ref: UserBallots
+
+resources:
+  Resources:
+    UserBallots:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: !Sub ${AWS::StackName}-UserBallots
+        AttributeDefinitions:
+          - AttributeName: ballot_id
+            AttributeType: S
+        BillingMode: PROVISIONED
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
+        KeySchema:
+          - AttributeName: ballot_id
+            KeyType: HASH
+        StreamSpecification:
+          StreamViewType: NEW_AND_OLD_IMAGES
+        SSESpecification:
+          SSEEnabled: true
+          SSEType: KMS

@@ -1,0 +1,332 @@
+export default Object.freeze([
+  {
+    candidate_name: 'ABALOS, BENHUR',
+    candidate_no: '1',
+    candidate_party: 'PFP',
+  },
+  {
+    candidate_name: 'ADONIS, JEROME',
+    candidate_no: '2',
+    candidate_party: 'MKBYN',
+  },
+  {
+    candidate_name: 'AMAD, WILSON',
+    candidate_no: '3',
+    candidate_party: 'IND',
+  },
+  {
+    candidate_name: 'ANDAMO, NARS ALYN',
+    candidate_no: '4',
+    candidate_party: 'MKBYN',
+  },
+  {
+    candidate_name: 'AQUINO, BAM',
+    candidate_no: '5',
+    candidate_party: 'KNP',
+  },
+  {
+    candidate_name: 'ARAMBULO, RONNEL',
+    candidate_no: '6',
+    candidate_party: 'MKBYN',
+  },
+  {
+    candidate_name: 'ARELLANO, ERNESTO',
+    candidate_no: '7',
+    candidate_party: 'KTPNAN',
+  },
+  {
+    candidate_name: 'BALLON, ROBERTO',
+    candidate_no: '8',
+    candidate_party: 'IND',
+  },
+  {
+    candidate_name: 'BINAY, ABBY',
+    candidate_no: '9',
+    candidate_party: 'NPC',
+  },
+  {
+    candidate_name: 'BONDOC, JIMMY',
+    candidate_no: '10',
+    candidate_party: 'PDPLBN',
+  },
+  {
+    candidate_name: 'BONG REVILLA,RAMON, JR',
+    candidate_no: '11',
+    candidate_party: 'LAKAS',
+  },
+  {
+    candidate_name: 'BOSITA, COLONEL',
+    candidate_no: '12',
+    candidate_party: 'IND',
+  },
+  {
+    candidate_name: 'BROSAS, ARLENE',
+    candidate_no: '13',
+    candidate_party: 'MKBYN',
+  },
+  {
+    candidate_name: 'CABONEGRO, ROY',
+    candidate_no: '14',
+    candidate_party: 'DPP',
+  },
+  {
+    candidate_name: 'CAPUYAN, ALLEN',
+    candidate_no: '15',
+    candidate_party: 'PPP',
+  },
+  {
+    candidate_name: 'CASINO, TEDDY',
+    candidate_no: '16',
+    candidate_party: 'MKBYN',
+  },
+  {
+    candidate_name: 'CASTRO, TEACHER FRANCE',
+    candidate_no: '17',
+    candidate_party: 'MKBYN',
+  },
+  {
+    candidate_name: 'CAYETANO, PIA',
+    candidate_no: '18',
+    candidate_party: 'NP',
+  },
+  {
+    candidate_name: 'DANGELO, DAVID',
+    candidate_no: '19',
+    candidate_party: 'BUNYOG',
+  },
+  {
+    candidate_name: 'DE ALBAN,ATTORNEY ANGELO',
+    candidate_no: '20',
+    candidate_party: 'IND',
+  },
+  {
+    candidate_name: 'DE GUZMAN, KA LEODY',
+    candidate_no: '21',
+    candidate_party: 'PLM',
+  },
+  {
+    candidate_name: 'DELA ROSA, BATO',
+    candidate_no: '22',
+    candidate_party: 'PDPLBN',
+  },
+  {
+    candidate_name: 'DORINGO, NANAY MIMI',
+    candidate_no: '23',
+    candidate_party: 'MKBYN',
+  },
+  {
+    candidate_name: 'ESCOBAL, ARNEL',
+    candidate_no: '24',
+    candidate_party: 'PM',
+  },
+  {
+    candidate_name: 'ESPIRITU, LUKE',
+    candidate_no: '25',
+    candidate_party: 'PLM',
+  },
+  {
+    candidate_name: 'FLORANDA, MODY PISTON',
+    candidate_no: '26',
+    candidate_party: 'MKBYN',
+  },
+  {
+    candidate_name: 'GAMBOA, MARC LOUIE',
+    candidate_no: '27',
+    candidate_party: 'IND',
+  },
+  {
+    candidate_name: 'GO, BONG GO',
+    candidate_no: '28',
+    candidate_party: 'PDPLBN',
+  },
+  {
+    candidate_name: 'GONZALES, NORBERTO',
+    candidate_no: '29',
+    candidate_party: 'PDSP',
+  },
+  {
+    candidate_name: 'HINLO, JAYVEE',
+    candidate_no: '30',
+    candidate_party: 'PDPLBN',
+  },
+  {
+    candidate_name: 'HONASAN, GRINGO',
+    candidate_no: '31',
+    candidate_party: 'RP',
+  },
+  {
+    candidate_name: 'JOSE, RELLY JR',
+    candidate_no: '32',
+    candidate_party: 'KBL',
+  },
+  {
+    candidate_name: 'LACSON, PING',
+    candidate_no: '33',
+    candidate_party: 'IND',
+  },
+  {
+    candidate_name: 'LAMBINO, RAUL',
+    candidate_no: '34',
+    candidate_party: 'PDPLBN',
+  },
+  {
+    candidate_name: 'LAPID, LITO',
+    candidate_no: '35',
+    candidate_party: 'NPC',
+  },
+  {
+    candidate_name: 'LEE, MANOY WILBERT',
+    candidate_no: '36',
+    candidate_party: 'AKSYON',
+  },
+  {
+    candidate_name: 'LIDASAN, AMIRAH',
+    candidate_no: '37',
+    candidate_party: 'MKBYN',
+  },
+  {
+    candidate_name: 'MARCOLETA, RODANTE',
+    candidate_no: '38',
+    candidate_party: 'IND',
+  },
+  {
+    candidate_name: 'MARCOS, IMEE R',
+    candidate_no: '39',
+    candidate_party: 'NP',
+  },
+  {
+    candidate_name: 'MARQUEZ, NORMAN',
+    candidate_no: '40',
+    candidate_party: 'IND',
+  },
+  {
+    candidate_name: 'MARTINEZ, ERIC',
+    candidate_no: '41',
+    candidate_party: 'IND',
+  },
+  {
+    candidate_name: 'MATA, DOC MARITES',
+    candidate_no: '42',
+    candidate_party: 'IND',
+  },
+  {
+    candidate_name: 'MATULA, ATTY',
+    candidate_no: '43',
+    candidate_party: 'SONNY',
+  },
+  {
+    candidate_name: 'MAZA, LIZA',
+    candidate_no: '44',
+    candidate_party: 'MKBYN',
+  },
+  {
+    candidate_name: 'MENDOZA, HEIDI',
+    candidate_no: '45',
+    candidate_party: 'IND',
+  },
+  {
+    candidate_name: 'MONTEMAYOR, JOEY',
+    candidate_no: '46',
+    candidate_party: 'IND',
+  },
+  {
+    candidate_name: 'MUSTAPHA, SUBAIR',
+    candidate_no: '47',
+    candidate_party: 'WPP',
+  },
+  {
+    candidate_name: 'OLIVAR, JOSE JESSIE',
+    candidate_no: '48',
+    candidate_party: 'IND',
+  },
+  {
+    candidate_name: 'ONG, DOC WILLIE',
+    candidate_no: '49',
+    candidate_party: 'AKSYON',
+  },
+  {
+    candidate_name: 'PACQUIAO, MANNY PACMAN',
+    candidate_no: '50',
+    candidate_party: 'PFP',
+  },
+  {
+    candidate_name: 'PANGILINAN, KIKO',
+    candidate_no: '51',
+    candidate_party: 'LP',
+  },
+  {
+    candidate_name: 'QUERUBIN, ARIEL PORFIRIO',
+    candidate_no: '52',
+    candidate_party: 'NP',
+  },
+  {
+    candidate_name: 'QUIBOLOY, APOLLO',
+    candidate_no: '53',
+    candidate_party: 'IND',
+  },
+  {
+    candidate_name: 'RAMOS, DANILO',
+    candidate_no: '54',
+    candidate_party: 'MKBYN',
+  },
+  {
+    candidate_name: 'REVILLAME, WILLIE WIL',
+    candidate_no: '55',
+    candidate_party: 'IND',
+  },
+  {
+    candidate_name: 'RODRIGUEZ, ATTY. VIC',
+    candidate_no: '56',
+    candidate_party: 'IND',
+  },
+  {
+    candidate_name: 'SAHIDULLA, NUR-ANA',
+    candidate_no: '57',
+    candidate_party: 'IND',
+  },
+  {
+    candidate_name: 'SALVADOR, PHILLIP IPE',
+    candidate_no: '58',
+    candidate_party: 'PDPLBN',
+  },
+  {
+    candidate_name: 'SOTTO, TITO',
+    candidate_no: '59',
+    candidate_party: 'NPC',
+  },
+  {
+    candidate_name: 'TAPADO, MICHAEL BONGBONG',
+    candidate_no: '60',
+    candidate_party: 'PM',
+  },
+  {
+    candidate_name: 'TOLENTINO, FRANCIS TOL',
+    candidate_no: '61',
+    candidate_party: 'PFP',
+  },
+  {
+    candidate_name: 'TULFO, BEN BITAG',
+    candidate_no: '62',
+    candidate_party: 'IND',
+  },
+  {
+    candidate_name: 'TULFO, ERWIN',
+    candidate_no: '63',
+    candidate_party: 'LAKAS',
+  },
+  {
+    candidate_name: 'VALBUENA, MAR MANIBELA',
+    candidate_no: '64',
+    candidate_party: 'IND',
+  },
+  {
+    candidate_name: 'VERCELES, LEANDRO',
+    candidate_no: '65',
+    candidate_party: 'IND',
+  },
+  {
+    candidate_name: 'VILLAR, CAMILLE',
+    candidate_no: '66',
+    candidate_party: 'NP',
+  },
+]);

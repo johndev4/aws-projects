@@ -1,0 +1,72 @@
+# "org" ensures this Service is used with the correct Serverless Framework Access Key.
+org: juanorg
+# "service" is the name of this project. This will also be added to your AWS resource names.
+service: ApiDemo
+
+provider:
+  name: aws
+  runtime: nodejs20.x
+  iam:
+    role:
+      managedPolicies:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaRole
+      statements:
+        - Effect: Allow
+          Action: "iot:*"
+          Resource: "*"
+        # - Effect: Allow
+        #   Action: "sts:AssumeRoleWithWebIdentity"
+        #   Resource: "arn:aws:iam::036003563447:role/service-role/demoCipAuthRole"
+        - Effect: Allow
+          Action: "sts:*"
+          Resource: "*"
+
+functions:
+  getUserFile:
+    handler: index.handler
+    # role: !GetAtt GetUserFileRole.Arn
+    events:
+      - http:
+          path: /
+          method: get
+          cors: true
+          authorizer:
+            name: userPoolAuthorizer
+            type: COGNITO_USER_POOLS
+            arn: "arn:aws:cognito-idp:ap-southeast-1:036003563447:userpool/ap-southeast-1_WZNbVRLf1"
+resources:
+  Resources:
+    GetUserFileRole:
+      Type: AWS::IAM::Role
+      Properties:
+        RoleName: !Sub ${AWS::StackName}-GetUserFileRole
+        AssumeRolePolicyDocument:
+          Version: "2012-10-17"
+          Statement:
+            - Effect: Allow
+              Principal:
+                Service: lambda.amazonaws.com
+              Action: sts:AssumeRole
+            # - Effect: Allow
+            #   Principal:
+            #     Federated: cognito-identity.amazonaws.com
+            #   Action: sts:AssumeRoleWithWebIdentity
+            #   Condition:
+            #     StringEquals:
+            #       "cognito-identity.amazonaws.com:aud": "ap-southeast-1_WZNbVRLf1"
+            - Effect: Allow
+              Principal:
+                Service: apigateway.amazonaws.com
+              Action: sts:AssumeRole
+        ManagedPolicyArns:
+          - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+          - arn:aws:iam::aws:policy/service-role/AWSLambdaRole
+        Policies:
+          - PolicyName: CustomInlinePolicy
+            PolicyDocument:
+              Version: "2012-10-17"
+              Statement:
+                - Effect: Allow
+                  Action: "iot:*"
+                  Resource: "*"

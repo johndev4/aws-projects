@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Error>
+  <Code>AccessDenied</Code>
+  <Message>User: arn:aws:sts::036003563447:assumed-role/demoCipGuestRole/CognitoIdentityCredentials
+    is not authorized to perform: s3:ListAllMyBuckets because no identity-based policy allows the
+    s3:ListAllMyBuckets action</Message>
+  <RequestId>82Y1NN7DQJ6T0S04</RequestId>
+  <HostId>
+    LDMi/9YgSmGXYfI0uTZEZT4V8nn66jSiSdzPMLVb3D42gKnAhWQqi6NDRxD7TNOcWZqeAA/1evVuxkgRFM0kTUH47sRBslj0HXJ18KJJcrM=</HostId>
+</Error>

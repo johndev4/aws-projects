@@ -1,0 +1,39 @@
+<div class="position-relative">
+  @if (isUserVoteCasted() === true) {
+  <mat-progress-bar
+    mode="indeterminate"
+    class="position-sticky top-0 z-3"
+  ></mat-progress-bar>
+  } @else {
+  <main id="ballotform" class="container">
+    <section class="row">
+      <article class="col">
+        <form [formGroup]="form" (ngSubmit)="onSubmit()">
+          <br /><br />
+
+          <mat-accordion multi>
+            <formly-form
+              [form]="form"
+              [fields]="fields"
+              [options]="options"
+              [(model)]="model"
+              (modelChange)="onModelChange()"
+            ></formly-form>
+          </mat-accordion>
+
+          <br />
+          <div class="d-flex align-items-center flex-row-reverse">
+            <button
+              mat-flat-button
+              type="submit"
+              [disabled]="submitBtnIsDisabled()"
+            >
+              Submit
+            </button>
+          </div>
+        </form>
+      </article>
+    </section>
+  </main>
+  }
+</div>
