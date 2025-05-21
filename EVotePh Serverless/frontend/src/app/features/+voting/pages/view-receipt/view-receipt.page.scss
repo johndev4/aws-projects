@@ -1,0 +1,43 @@
+.receipt-container {
+  max-width: 320px;
+  font-family: "Courier New", Courier, monospace;
+  background: #fff;
+  border: 1px dashed #999;
+  box-shadow: 0 0 3px rgba(0, 0, 0, 0.1);
+  color: #111;
+  line-height: 1.4;
+  position: relative;
+}
+
+.receipt-container::before,
+.receipt-container::after {
+  height: 25px;
+  background: linear-gradient(to bottom, rgba(0, 0, 0, 0.08), transparent);
+}
+
+.receipt-container::after {
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.08), transparent);
+}
+
+.receipt-line {
+  font-size: 13px;
+  border-bottom: 1px dotted #ccc;
+  padding: 4px 0;
+}
+
+hr.dashed {
+  border-top: 1px dashed #aaa;
+  margin: 10px 0;
+}
+
+/* Faux thermal fade effect (top + bottom) */
+.receipt-container::before,
+.receipt-container::after {
+  content: "";
+  display: block;
+  height: 20px;
+  background: linear-gradient(to bottom, rgba(0, 0, 0, 0.05), transparent);
+}
+.receipt-container::after {
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.05), transparent);
+}

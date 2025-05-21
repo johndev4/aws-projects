@@ -1,0 +1,73 @@
+service: evps-apigw
+frameworkVersion: "4"
+
+provider:
+  name: aws
+  runtime: nodejs20.x
+  stage: ${opt:stage, 'dev'}
+  region: ${opt:region, 'ap-southeast-1'}
+
+resources:
+  Resources:
+    EvpsApiGw:
+      Type: AWS::ApiGateway::RestApi
+      Properties:
+        Name: !Sub ${AWS::StackName}-RestApiGw
+        MinimumCompressionSize: 0
+        EndpointConfiguration:
+          Types:
+            - REGIONAL
+    EvpsApiGwResponse401:
+      Type: "AWS::ApiGateway::GatewayResponse"
+      Properties:
+        ResponseParameters:
+          gatewayresponse.header.Access-Control-Allow-Origin: "'*'"
+          gatewayresponse.header.Access-Control-Allow-Headers: "'*'"
+        ResponseType: UNAUTHORIZED
+        RestApiId: !Ref EvpsApiGw
+        StatusCode: "401"
+    EvpsApiGwResponse504:
+      Type: "AWS::ApiGateway::GatewayResponse"
+      Properties:
+        ResponseParameters:
+          gatewayresponse.header.Access-Control-Allow-Origin: "'*'"
+          gatewayresponse.header.Access-Control-Allow-Headers: "'*'"
+        ResponseType: INTEGRATION_TIMEOUT
+        RestApiId: !Ref EvpsApiGw
+        StatusCode: "504"
+    EvpsApiGwSharedAuthorizer:
+      Type: AWS::ApiGateway::Authorizer
+      Properties:
+        Name: SharedUserPoolAuthorizer
+        IdentitySource: method.request.header.Authorization
+        RestApiId: !Ref EvpsApiGw
+        Type: COGNITO_USER_POOLS
+        ProviderARNs:
+          - ${param:userPoolArn}
+    EvpsApiGwTestAuthorizer:
+      Type: AWS::ApiGateway::Authorizer
+      Properties:
+        Name: UserPoolTestAuthorizer
+        IdentitySource: method.request.header.Authorization
+        RestApiId: !Ref EvpsApiGw
+        Type: COGNITO_USER_POOLS
+        ProviderARNs:
+          - arn:aws:cognito-idp:ap-southeast-1:036003563447:userpool/ap-southeast-1_WZNbVRLf1
+
+  Outputs:
+    EvpsApiGwId:
+      Value: !Ref EvpsApiGw
+      Export:
+        Name: !Sub ${AWS::StackName}-ApiGw:Id
+    EvpsApiGwRootResourceId:
+      Value: !GetAtt EvpsApiGw.RootResourceId
+      Export:
+        Name: !Sub ${AWS::StackName}-ApiGw:RootResourceId
+    EvpsApiGwSharedAuthorizerId:
+      Value: !Ref EvpsApiGwSharedAuthorizer
+      Export:
+        Name: !Sub ${AWS::StackName}-ApiGw:SharedAuthorizerId
+    EvpsApiGwTestAuthorizerId:
+      Value: !Ref EvpsApiGwTestAuthorizer
+      Export:
+        Name: !Sub ${AWS::StackName}-ApiGwTest:AuthorizerId
