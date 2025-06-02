@@ -1,0 +1,52 @@
+getEncryptionPublicKey:
+  handler: src/getEncryptionPublicKey.handler
+  role:
+    "Fn::GetAtt": [GetEncryptionPublicKeyKmsLambdaRole, Arn]
+  events:
+    - http:
+        path: /voting/encryption/public-key
+        method: get
+        cors: true
+        authorizer:
+          type: COGNITO_USER_POOLS
+          authorizerId:
+            "Fn::ImportValue": "evps-apigw-${self:provider.stage}-ApiGw:SharedAuthorizerId"
+          scopes: # for access token only
+            - email
+castVote:
+  handler: src/castVote.handler
+  role:
+    "Fn::GetAtt": [CastVoteLambdaRole, Arn]
+  events:
+    - http:
+        path: /voting/vote/cast
+        method: post
+        cors: true
+        # authorizer:
+        #   name: userPoolAuthorizer
+        #   type: COGNITO_USER_POOLS
+        #   arn:
+        #     "Fn::ImportValue": "evps-auth-${self:provider.stage}-UserPool:Arn"
+        authorizer:
+          type: COGNITO_USER_POOLS
+          authorizerId:
+            "Fn::ImportValue": "evps-apigw-${self:provider.stage}-ApiGw:SharedAuthorizerId"
+          scopes: # for access token only
+            - email
+  environment:
+    BALLOTS_TABLE_NAME: evps-${self:provider.stage}-UserBallots
+checkIfUserHasVoted:
+  handler: src/checkIfUserHasVoted.handler
+  events:
+    - http:
+        path: /voting/user/has-voted
+        method: get
+        cors: true
+        authorizer:
+          type: COGNITO_USER_POOLS
+          authorizerId:
+            "Fn::ImportValue": "evps-apigw-${self:provider.stage}-ApiGw:SharedAuthorizerId"
+          scopes: # for access token only
+            - email
+  environment:
+    BALLOTS_TABLE_NAME: evps-${self:provider.stage}-UserBallots

@@ -1,0 +1,27 @@
+org: juanorg
+app: EVotePhServerless
+
+stages:
+  dev:
+    params:
+      userPoolClientDomain: "dev-evoteph" # This is the value of the "userPoolClientDomain" param in the dev stage
+  prod:
+    params:
+      userPoolClientDomain: "prod-evoteph" # This is the value of the "userPoolClientDomain" param in the prod stage
+
+services:
+  # Framework: Serverless Framework Traditional
+  auth:
+    path: ./shared-resources/auth
+
+  apigw:
+    path: ./shared-resources/apigw
+    dependsOn:
+      - auth
+    params:
+      userPoolArn: ${auth.EvpsUserPoolArn}
+
+  voting:
+    path: ./services/voting
+    dependsOn:
+      - auth

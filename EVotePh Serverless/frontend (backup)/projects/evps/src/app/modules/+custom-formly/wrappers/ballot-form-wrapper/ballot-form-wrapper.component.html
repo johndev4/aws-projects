@@ -1,0 +1,12 @@
+<mat-expansion-panel [expanded]="props['accordion_expanded'] === true">
+  <mat-expansion-panel-header>
+    <mat-panel-title>
+      <span style="font-size: 11pt"
+        >{{ props.label + " /" }}
+        <span style="font-size: 10pt">Vote for 12</span>
+      </span>
+    </mat-panel-title>
+  </mat-expansion-panel-header>
+
+  <ng-container #fieldComponent />
+</mat-expansion-panel>
