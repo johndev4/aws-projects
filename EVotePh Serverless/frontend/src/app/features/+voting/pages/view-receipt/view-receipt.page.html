@@ -1,0 +1,53 @@
+@if (ballotId && ballotContent) {
+<div #receiptRef class="receipt-container p-4 shadow mx-auto mt-5 bg-white">
+  <div class="text-center mb-4">
+    <h5 class="mb-1">🗳️ ELECTORAL VOTE RECEIPT</h5>
+    <small>{{ currentDate | date: 'medium' }}</small>
+    <hr class="dashed" />
+  </div>
+
+  <div *ngFor="let category of voteCategories" class="mb-3">
+    <h6 class="text-uppercase font-weight-bold">{{ category.name }}</h6>
+    <ul class="list-unstyled mb-0">
+      <li *ngFor="let candidate of category.candidates" class="receipt-line">
+        {{ candidate }}
+      </li>
+    </ul>
+    <hr class="dashed" />
+  </div>
+
+  <div class="text-center my-3" *ngIf="ballotId">
+    <ngx-qrcode-styling
+      [data]="ballotId"
+      [width]="120"
+      [height]="120"
+      [margin]="0"
+      format="png"
+      [dotsOptions]="{ color: '#111', type: 'dots' }"
+      [backgroundOptions]="{ color: '#ffffff' }"
+    >
+    </ngx-qrcode-styling>
+
+    <br />
+    <small class="text-muted d-block mt-2 text-break"
+      >Ballot ID: {{ballotId}}</small
+    >
+  </div>
+
+  <!-- <div class="mt-3">
+    <p class="mb-0"><strong>Signed by:</strong> {{ signedBy }}</p>
+    <p class="mb-0"><strong>Signature:</strong> {{ digitalSignature }}</p>
+  </div> -->
+
+  <!-- <div class="text-center mt-4">
+    <p class="mb-1">Thank you for voting! 🧾</p>
+    <small>Powered by Trust & Tech</small>
+  </div> -->
+</div>
+
+<div class="text-center mt-3">
+  <button class="btn btn-sm btn-dark" (click)="downloadPdf()">
+    📄 Download PDF
+  </button>
+</div>
+}

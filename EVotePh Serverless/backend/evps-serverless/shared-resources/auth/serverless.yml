@@ -1,0 +1,149 @@
+service: evps-auth
+frameworkVersion: "4"
+
+provider:
+  name: aws
+  runtime: nodejs20.x
+  stage: ${opt:stage, 'dev'}
+  region: ${opt:region, 'ap-southeast-1'}
+
+resources:
+  Resources:
+    EvpsUserPool:
+      Type: AWS::Cognito::UserPool
+      Properties:
+        UserPoolName: !Sub ${AWS::StackName}-EvpsUserPool
+        Policies:
+          PasswordPolicy:
+            MinimumLength: 8
+            RequireUppercase: true
+            RequireLowercase: true
+            RequireNumbers: true
+            RequireSymbols: true
+        AdminCreateUserConfig:
+          AllowAdminCreateUserOnly: false
+        UsernameAttributes:
+          - email
+        UserAttributeUpdateSettings:
+          AttributesRequireVerificationBeforeUpdate:
+            - email
+        Schema:
+          - Name: email
+            AttributeDataType: String
+            Required: true
+            Mutable: false
+            DeveloperOnlyAttribute: false
+            StringAttributeConstraints:
+              MaxLength: "120"
+              MinLength: "6"
+          - Name: given_name
+            AttributeDataType: String
+            Required: true
+            Mutable: true
+            DeveloperOnlyAttribute: false
+            StringAttributeConstraints:
+              MaxLength: "50"
+              MinLength: "1"
+          - Name: middle_name
+            AttributeDataType: String
+            Required: true
+            Mutable: true
+            DeveloperOnlyAttribute: false
+            StringAttributeConstraints:
+              MaxLength: "50"
+              MinLength: "1"
+          - Name: family_name
+            AttributeDataType: String
+            Required: true
+            Mutable: true
+            DeveloperOnlyAttribute: false
+            StringAttributeConstraints:
+              MaxLength: "50"
+              MinLength: "1"
+          - Name: gender
+            AttributeDataType: String
+            Required: true
+            Mutable: true
+            DeveloperOnlyAttribute: false
+            StringAttributeConstraints:
+              MaxLength: "50"
+              MinLength: "1"
+          - Name: birthdate
+            AttributeDataType: String
+            Required: true
+            Mutable: true
+            DeveloperOnlyAttribute: false
+            StringAttributeConstraints:
+              MaxLength: "50"
+              MinLength: "1"
+          - Name: address
+            AttributeDataType: String
+            Required: true
+            Mutable: true
+            DeveloperOnlyAttribute: false
+            StringAttributeConstraints:
+              MaxLength: "50"
+              MinLength: "1"
+        MfaConfiguration: OPTIONAL
+        EnabledMfas:
+          - SOFTWARE_TOKEN_MFA
+        AccountRecoverySetting:
+          RecoveryMechanisms:
+            - Name: verified_email
+              Priority: 1
+        AutoVerifiedAttributes:
+          - email
+        VerificationMessageTemplate:
+          DefaultEmailOption: CONFIRM_WITH_CODE
+        EmailVerificationMessage: Your verification code is {####}
+        EmailVerificationSubject: Your verification code
+        # LambdaConfig:
+        #   PostConfirmation: !GetAtt PostConfirmationDataInitLambdaFunction.Arn
+    EvpsWebClient:
+      Type: AWS::Cognito::UserPoolClient
+      Properties:
+        UserPoolId: !Ref EvpsUserPool
+        AllowedOAuthFlows:
+          - code
+        AllowedOAuthFlowsUserPoolClient: true
+        AllowedOAuthScopes:
+          - email
+          - openid
+          - profile
+        CallbackURLs:
+          - http://localhost:3000/auth
+          # - https://d84l1y8p4kdic.cloudfront.net/
+        ExplicitAuthFlows:
+          - ALLOW_USER_AUTH
+          - ALLOW_USER_SRP_AUTH
+          - ALLOW_REFRESH_TOKEN_AUTH
+        GenerateSecret: false
+        PreventUserExistenceErrors: ENABLED
+        SupportedIdentityProviders:
+          - COGNITO
+        EnableTokenRevocation: true
+        AuthSessionValidity: 3
+    UserPoolDomain:
+      Type: AWS::Cognito::UserPoolDomain
+      Properties:
+        Domain: ${param:userPoolClientDomain}
+        UserPoolId: !Ref EvpsUserPool
+    ManagedLoginBranding:
+      Type: AWS::Cognito::ManagedLoginBranding
+      Properties:
+        UserPoolId: !Ref EvpsUserPool
+        ClientId: !Ref EvpsWebClient
+        UseCognitoProvidedValues: true
+    # PostConfirmationDataInitCognitoPermission:
+    #   Type: AWS::Lambda::Permission
+    #   Properties:
+    #     Action: lambda:InvokeFunction
+    #     FunctionName: !GetAtt PostConfirmationDataInitLambdaFunction.Arn
+    #     Principal: cognito-idp.amazonaws.com
+    #     SourceArn: !GetAtt EvpsUserPool.Arn
+
+  Outputs:
+    EvpsUserPoolArn:
+      Value: !GetAtt EvpsUserPool.Arn
+      Export:
+        Name: !Sub ${AWS::StackName}-UserPool:Arn
