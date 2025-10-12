@@ -1,0 +1,148 @@
+service: evps-voting
+frameworkVersion: "4"
+
+provider:
+  name: aws
+  runtime: nodejs20.x
+  stage: ${opt:stage, 'dev'}
+  region: ${opt:region, 'ap-southeast-1'}
+  # endpointType: REGIONAL
+  iam:
+    role:
+      managedPolicies:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      statements:
+        - Effect: Allow
+          Action: "iot:*"
+          Resource: "*"
+        - Effect: Allow
+          Action:
+            - dynamodb:Query
+            - dynamodb:PutItem
+          Resource:
+            Fn::GetAtt: [UserBallots, Arn]
+  apiGateway:
+    restApiId:
+      "Fn::ImportValue": "evps-apigw-${self:provider.stage}-ApiGw:Id"
+    restApiRootResourceId:
+      "Fn::ImportValue": "evps-apigw-${self:provider.stage}-ApiGw:RootResourceId"
+  environment:
+    STAGE: ${self:provider.stage}
+    REGION: ${self:provider.region}
+    KMS_KEY_ID: ${env:KMS_KEY_ID}
+
+custom:
+  serverless-offline:
+    httpPort: 5000
+    stage: dev
+    noAuth: true
+    useInProcess: false
+  dotenv:
+    # path: ../../env
+    exclude:
+      - SERVERLESS_ACCESS_KEY
+      - AWS_PROFILE
+    required:
+      env:
+        - KMS_KEY_ID
+      file: true
+
+package:
+  individually: true
+  excludeDevDependencies: true
+  exclude:
+    - .serverless/**
+    - serverless.yml
+    - package.json
+    - package-lock.json
+
+plugins:
+  - serverless-dotenv-plugin
+  - serverless-offline
+
+functions:
+  - ${file(./functions.yml)}
+
+resources:
+  Resources:
+    UserBallots:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: evps-${self:provider.stage}-UserBallots
+        AttributeDefinitions:
+          - AttributeName: user_id
+            AttributeType: S
+          - AttributeName: ballot_id
+            AttributeType: S
+        BillingMode: PROVISIONED
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
+        KeySchema:
+          - AttributeName: user_id
+            KeyType: HASH
+          - AttributeName: ballot_id
+            KeyType: RANGE
+        StreamSpecification:
+          StreamViewType: NEW_AND_OLD_IMAGES
+        SSESpecification:
+          SSEEnabled: true
+          SSEType: KMS
+    GetEncryptionPublicKeyKmsLambdaRole:
+      Type: AWS::IAM::Role
+      Properties:
+        RoleName: evps-${self:provider.stage}-lambda-get-public-key-role
+        AssumeRolePolicyDocument:
+          Version: "2012-10-17"
+          Statement:
+            - Effect: Allow
+              Principal:
+                Service:
+                  - lambda.amazonaws.com
+              Action:
+                - sts:AssumeRole
+        ManagedPolicyArns:
+          - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+        Policies:
+          - PolicyName: KmsGetPublicKeyAccessPolicy
+            PolicyDocument:
+              Version: "2012-10-17"
+              Statement:
+                - Effect: Allow
+                  Action:
+                    - kms:GetPublicKey
+                  Resource: arn:aws:kms:${self:provider.region}:${aws:accountId}:key/${env:KMS_KEY_ID}
+    CastVoteLambdaRole:
+      Type: AWS::IAM::Role
+      Properties:
+        RoleName: evps-${self:provider.stage}-lambda-cast-vote-role
+        AssumeRolePolicyDocument:
+          Version: "2012-10-17"
+          Statement:
+            - Effect: Allow
+              Principal:
+                Service:
+                  - lambda.amazonaws.com
+              Action:
+                - sts:AssumeRole
+        ManagedPolicyArns:
+          - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+        Policies:
+          - PolicyName: KmsDecryptPolicy
+            PolicyDocument:
+              Version: "2012-10-17"
+              Statement:
+                - Effect: Allow
+                  Action:
+                    - kms:Decrypt
+                  Resource: arn:aws:kms:${self:provider.region}:${aws:accountId}:key/${env:KMS_KEY_ID}
+          - PolicyName: BallotAccessPolicy
+            PolicyDocument:
+              Version: "2012-10-17"
+              Statement:
+                - Effect: Allow
+                  Action:
+                    - dynamodb:Query
+                    - dynamodb:PutItem
+                  Resource:
+                    Fn::GetAtt: [UserBallots, Arn]
