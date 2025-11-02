@@ -1,4 +1,3 @@
-const WebSocket = require("ws");
 const { config } = require("./lib/utils/config");
 
 const socketUrl = `wss://${config.wsid}.execute-api.ap-southeast-1.amazonaws.com/${config.stage}?userId=0`;
@@ -9,7 +8,7 @@ const timeout = setTimeout(() => {
   ws.close();
 }, 300000); // 5 minute timeout
 
-ws.on("open", () => {
+ws.addEventListener("open", () => {
   console.log("WebSocket connected, waiting for MFA code...");
   setTimeout(() => {
     ws.send(
@@ -22,11 +21,11 @@ ws.on("open", () => {
   }, 1000);
 });
 
-ws.on("message", (data) => {
+ws.addEventListener("message", (data) => {
   const message = Buffer.from(data).toString();
   console.log("Received socket message:", message);
 });
 
-ws.on("error", (error) => {
+ws.addEventListener("error", (error) => {
   console.error("WebSocket error:", error);
 });
