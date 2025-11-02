@@ -1,0 +1,110 @@
+# "org" ensures this Service is used with the correct Serverless Framework Access Key.
+org: juanorg
+# "service" is the name of this project. This will also be added to your AWS resource names.
+service: ${self:custom.projectName}-websocket
+
+custom:
+  projectName: juanorg
+
+provider:
+  name: aws
+  runtime: nodejs20.x
+  stage: ${opt:stage, 'dev'}
+  region: ${opt:region, 'ap-southeast-1'}
+  lambdaHashingVersion: 20201221
+  websocketsApiName: ${self:custom.projectName}-${self:provider.stage}-wsApiGw
+  websocketsApiRouteSelectionExpression: $request.body.action
+  websocketsDescription: "Websocket API for ${self:custom.projectName}"
+  environment:
+    STAGE: ${self:provider.stage}
+    REGION: ${self:provider.region}
+    WS_CONNECTIONS_TABLE: !Ref WebsocketConnectionsTable
+    WS_APIGW_ID: !Ref WebsocketsApi
+  iam:
+    role:
+      statements:
+        - Effect: Allow
+          Action:
+            - dynamodb:PutItem
+            - dynamodb:GetItem
+            - dynamodb:DeleteItem
+            - dynamodb:Query
+            - dynamodb:Scan
+          Resource:
+            - !GetAtt WebsocketConnectionsTable.Arn
+            - !Sub "${WebsocketConnectionsTable.Arn}/index/*"
+        - Effect: Allow
+          Action:
+            - execute-api:ManageConnections
+          Resource:
+            - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebsocketsApi}/*/*"
+package:
+  individually: true
+  excludeDevDependencies: true
+  exclude:
+    - .serverless/**
+    - serverless.yml
+    - package.json
+    - package-lock.json
+    - .gitignore
+    - README.md
+
+functions:
+  socketConnectionsHandler:
+    handler: socketConnectionsHandler/index.handler
+    events:
+      - websocket:
+          route: $connect
+      - websocket:
+          route: $disconnect
+      - websocket:
+          route: $default
+  sendMessage:
+    handler: sendMessage/index.handler
+    events:
+      - websocket:
+          route: sendMessage
+
+resources:
+  Parameters:
+    ProjectName:
+      Description: Name of the project
+      Type: String
+      Default: juanorg
+    Stage:
+      Description: An environment name that is prefixed to resource names
+      Type: String
+      AllowedValues:
+        - dev
+        - prod
+      Default: ${self:provider.stage}
+  Resources:
+    WebsocketConnectionsTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: !Sub "${ProjectName}-${Stage}-websocketConnections"
+        BillingMode: PROVISIONED
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
+        AttributeDefinitions:
+          - AttributeName: connectionId
+            AttributeType: S
+          - AttributeName: userId
+            AttributeType: S
+        KeySchema:
+          - AttributeName: connectionId
+            KeyType: HASH
+        TimeToLiveSpecification:
+          AttributeName: ttl
+          Enabled: true
+        GlobalSecondaryIndexes:
+          - IndexName: userId-index
+            KeySchema:
+              - AttributeName: userId
+                KeyType: HASH
+            Projection:
+              ProjectionType: ALL
+            ProvisionedThroughput:
+              ReadCapacityUnits: 1
+              WriteCapacityUnits: 1
